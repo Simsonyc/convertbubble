@@ -1,0 +1,1070 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ConvertBubble — Builder NeuroBreak™ V4.5.0</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@300;400;500;600&family=Roboto:wght@300;400;500;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+
+
+
+  <style>
+    :root {
+      --primary: linear-gradient(90deg,#ff7a18 0%,#00e0ff 100%);
+      --bg:#0b0c14;
+      --panel:#11131f;
+      --text:#ffffff;
+      --border:#1e2230;
+      --input-bg:#0f111b;
+      --shadow:0 4px 16px rgba(0,0,0,0.4);
+      --radius:16px;
+      --transition:all 0.25s ease;
+    }
+    [data-theme="light"]{
+      --bg:#f7f8fb;
+      --panel:#ffffff;
+      --text:#11131f;
+      --border:#dfe3ee;
+      --input-bg:#f3f4f7;
+      --shadow:0 4px 14px rgba(0,0,0,0.08);
+    }
+
+    *{box-sizing:border-box;}
+
+    body{
+      font-family:"Poppins","Inter",system-ui,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      margin:0;
+      display:flex;
+      flex-direction:column;
+      min-height:100vh;
+      transition:var(--transition);
+    }
+    header{
+      padding:14px 20px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background:var(--panel);
+      border-bottom:1px solid var(--border);
+      box-shadow:var(--shadow);
+    }
+    header h1{
+      font-size:16px;
+      margin:0;
+      font-weight:600;
+      background:var(--primary);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+    .theme-toggle{
+      background:var(--primary);
+      border:none;
+      border-radius:50%;
+      width:38px;
+      height:38px;
+      cursor:pointer;
+      color:#fff;
+      font-size:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:var(--shadow);
+      transition:transform .3s ease;
+    }
+    .theme-toggle:hover{transform:scale(1.1);}
+
+    main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      padding:16px;
+    }
+
+    section{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      box-shadow:var(--shadow);
+    }
+    h3{
+      margin:0 0 6px 0;
+      font-size:15px;
+      font-weight:600;
+      background:var(--primary);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+    label{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      font-size:14px;
+    }
+    input,select{
+      padding:9px 10px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:var(--input-bg);
+      color:var(--text);
+      font-size:14px;
+      outline:none;
+      transition:var(--transition);
+    }
+    input:focus,select:focus{
+      border-color:#00e0ff;
+      box-shadow:0 0 6px rgba(0,224,255,.5);
+    }
+    input[type="range"]{
+      accent-color:#00e0ff;
+      cursor:pointer;
+    }
+    button{
+      padding:9px 14px;
+      border-radius:10px;
+      border:1px solid transparent;
+      font-weight:600;
+      cursor:pointer;
+      color:var(--text);
+      background:#14151f;
+      transition:all .25s ease;
+    }
+    button:hover{
+      border-image:var(--primary) 1;
+      border-width:1px;
+      background:#1c1e2b;
+      color:#fff;
+      box-shadow:0 0 8px rgba(0,224,255,.4);
+    }
+    .btn-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    button.accent{
+      background:var(--primary);
+      color:#fff;
+      border:none;
+      text-shadow:0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    /* IFRAME PREVIEW — FIX ANTI-TRONCATURE */
+    iframe{
+      width:100%;
+      border:none;
+      border-radius:0;
+      background:transparent;
+      box-shadow:none;
+      backdrop-filter:none;
+      -webkit-backdrop-filter:none;
+      overflow:visible;
+      transition:none;
+      height:100%;
+      min-height:420px;
+    }
+
+    @media(min-width:768px){
+      main{flex-direction:row;}
+      .builder-panel{
+        flex:1;
+        max-width:420px;
+        overflow-y:auto;
+        height:calc(100vh - 80px);
+        padding-right:4px;
+      }
+      .preview-panel{
+        flex:2;
+        position:relative;
+        align-items:flex-start;
+        justify-content:flex-start;
+        overflow:visible !important;
+        background:transparent !important;
+        box-shadow:none !important;
+        z-index:0 !important;
+        height:calc(100vh - 80px);
+      }
+      .preview-panel iframe{
+        max-width:none !important;
+        height:100% !important;
+        background:transparent !important;
+      }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-thumb{background:#00e0ff44;border-radius:10px;}
+
+    /* CTA list */
+    #ctaList{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .cta-item{
+      display:grid;
+      grid-template-columns:1.1fr 1.2fr 0.8fr 0.6fr 0.6fr auto;
+      gap:4px;
+      align-items:center;
+      width:100%;
+      box-sizing:border-box;
+      overflow:hidden;
+    }
+    .cta-item input,
+    .cta-item select{
+      padding:6px 8px;
+      font-size:12px;
+    }
+    .cta-item button{
+      padding:4px 6px;
+      font-size:12px;
+    }
+    .cta-mode-row{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      font-size:13px;
+    }
+    .cta-mode-row label{
+      flex-direction:row;
+      align-items:center;
+      gap:6px;
+    }
+    small.helper{
+      font-size:12px;
+      opacity:.75;
+    }
+
+    #toastContainer{
+      position:fixed;
+      top:20px;
+      right:20px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      z-index:99999;
+      pointer-events:none;
+    }
+    .toast{
+      padding:10px 16px;
+      border-radius:8px;
+      font-size:13px;
+      color:#fff;
+      box-shadow:0 2px 10px rgba(0,0,0,0.3);
+      opacity:0;
+      transform:translateY(-10px);
+      transition:all 0.4s ease;
+    }
+
+    /* Correction du débordement horizontal du builder */
+    .builder-panel{
+      max-width:100vw !important;
+      overflow-x:hidden !important;
+    }
+
+    /* Protection vidéo ConvertBubble contre les styles globaux */
+    .convertbubble-wrapper video {
+      width:100% !important;
+      height:100% !important;
+      display:block !important;
+      object-fit:cover !important;
+      object-position:center !important;
+      border-radius:inherit !important;
+    }
+
+    /* MODE MOBILE — mise en colonne + bulle réelle au-dessus (si cb.js injecté dans parent) */
+    @media (max-width: 768px) {
+      main {
+        flex-direction: column !important;
+      }
+
+      .builder-panel {
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        padding-bottom: 180px !important;
+        position: relative !important;
+        z-index: 1 !important;
+      }
+
+      .preview-panel {
+        position: relative !important;
+        width: 100% !important;
+        height: auto !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+        z-index: 0 !important;
+        pointer-events: none !important;
+      }
+
+      .preview-panel iframe {
+        width: 100% !important;
+        height: auto !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        pointer-events: none !important;
+      }
+
+      .convertbubble-wrapper {
+        position: fixed !important;
+        bottom: 20px !important;
+        right: 20px !important;
+        z-index: 2147483647 !important;
+        pointer-events: auto !important;
+        overflow: visible !important;
+      }
+    }
+/* ============================
+   FIX MODE CLAIR — Builder
+   ============================ */
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #d0d0d0 !important;
+}
+
+[data-theme="light"] button {
+  background: #f2f2f2 !important;
+  color: #000000 !important;
+  border: 1px solid #d0d0d0 !important;
+}
+
+[data-theme="light"] .cta-item button,
+[data-theme="light"] .cta-item input,
+[data-theme="light"] .cta-item select {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #c8c8c8 !important;
+}
+
+/* Boutons spéciaux */
+[data-theme="light"] .danger {
+  background: #ff4b4b !important;
+  color: #fff !important;
+}
+
+[data-theme="light"] .primary {
+  background: #00bcd4 !important;
+  color: #fff !important;
+}
+/* 🔥 Patch essentiel : bulle flottante dans le builder */
+.convertbubble-wrapper {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 2147483647 !important;
+}
+
+.preview-panel {
+  z-index: 0 !important;
+}
+
+  </style>
+</head>
+<body data-theme="dark">
+  <header>
+    <h1>ConvertBubble — Builder NeuroBreak™</h1>
+    <button class="theme-toggle" id="themeToggle">☀️</button>
+  </header>
+
+  <main>
+    <div class="builder-panel">
+      <!-- TOGGLE BULLE / PLAYER -->
+      <div id="modeToggle" style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+        <button id="modeBubble" class="accent" type="button" style="flex:1;">Bulle</button>
+        <button id="modePlayer" type="button" style="flex:1;">Player</button>
+      </div>
+
+      <!-- THÈME BULLE -->
+      <div class="mode-bulle">
+      <section>
+        <h3>🎨 Thème de la bulle</h3>
+
+        <label>Couleur de fond de la bulle
+          <input id="bubbleBg" type="color" value="#ff0055">
+        </label>
+
+        <label>Couleur de bordure
+          <input id="borderColor" type="color" value="#ffffff">
+        </label>
+
+        <label>Épaisseur bordure (px)
+          <input id="borderWidth" type="number" min="0" max="10" value="2">
+        </label>
+
+        <label>Forme
+          <select id="shape">
+            <option value="square">Carré</option>
+            <option value="horizontal">Rectangle horizontal</option>
+            <option value="vertical">Vertical</option>
+            <option value="portrait">Portrait</option>
+            <option value="badge">Badge rond</option>
+          </select>
+        </label>
+
+        <label>Animation
+          <select id="animation">
+            <option value="none">Aucune</option>
+            <option value="pulse">Pulse</option>
+            <option value="bounce">Bounce</option>
+            <option value="float">Flottante</option>
+            <option value="rotate">Rotation</option>
+            <option value="breath">Respiration</option>
+          </select>
+        </label>
+
+        <label>Police du texte
+          <select id="fontFamily">
+  <option value="Inter, system-ui, sans-serif">Inter</option>
+  <option value="Poppins, system-ui, sans-serif">Poppins</option>
+  <option value="Roboto, system-ui, sans-serif">Roboto</option>
+  <option value="Montserrat, system-ui, sans-serif">Montserrat</option>
+</select>
+        </label>
+
+        <label>Texte de la bulle
+  <input id="captionText" type="text" placeholder="Regarde la vidéo 👇">
+</label>
+
+<label>Taille du texte
+  <input id="fontSize" type="range" min="11" max="22" value="15">
+  <span id="fontSizeValue" style="font-size:12px;opacity:.8;">15px</span>
+</label>
+      </section>
+      </div>
+      <div class="mode-bulle">
+      <!-- BRANDING -->
+      <section>
+        <h3>🏷️ Branding</h3>
+        <label>Label
+          <input id="brandLabel" type="text" placeholder="Ex : ConvertBubble">
+        </label>
+        <label>Couleur header
+          <input id="brandColor" type="color" value="#ff0055">
+        </label>
+      </section>
+      </div>
+      <div class="mode-bulle">
+      <!-- VIDÉO -->
+      <section>
+        <h3>🎬 Vidéo</h3>
+<!-- LAUNCHER CONFIG -->
+<label>Type de launcher
+  <select id="launchType">
+    <option value="videoPreview">Vidéo (aperçu animé)</option>
+    <option value="image">Image statique</option>
+    <option value="logo">Logo</option>
+  </select>
+</label>
+
+<label>Source (URL)
+  <input id="launchSrc" type="url" placeholder="https://.../media.png">
+</label>
+<div id="launchDropZone" 
+     style="border:2px dashed #666; padding:14px; border-radius:10px;
+            text-align:center; cursor:pointer; opacity:.7; transition:.2s; margin-top:8px;">
+  Glisser-déposer un fichier ici…<br>
+  <small>(image, logo ou courte vidéo)</small>
+</div>
+
+<input id="launchFileInput" type="file" accept="image/*,video/*" style="display:none;">
+
+<label>Texte ALT
+  <input id="launchAlt" type="text" placeholder="Texte alternatif">
+</label>
+
+<label id="previewSecondsLabel">Durée preview (sec)
+  <input id="previewSeconds" type="number" min="1" max="15" value="3">
+</label>
+
+<hr style="opacity:.25;margin:10px 0;">
+
+<div class="mode-player">
+        <label>URL vidéo
+          <input id="videoUrl" type="url" placeholder="videos/demo.mp4">
+        </label>
+        <label>Image poster
+          <input id="poster" type="url" placeholder="https://.../image.jpg">
+        </label>
+</div>
+      </section>
+      </div>
+      <!-- CTA -->
+      <section id="panelCta" class="mode-player">
+        <h3>🎯 Call-To-Action</h3>
+
+        <div class="cta-mode-row">
+          <label><input type="radio" name="ctaMode" value="fixed" checked> CTA fixes</label>
+          <label><input type="radio" name="ctaMode" value="timed"> CTA timés</label>
+        </div>
+        <small class="helper">Jusqu'à 4 CTA. En mode timé, chaque CTA apparaît à un moment précis.</small>
+
+        <div class="btn-row" style="margin-top:6px;">
+          <button id="addCTA" class="accent">➕ Ajouter un CTA</button>
+        </div>
+
+        <div id="ctaList"></div>
+
+        <h4 style="margin:10px 0 4px;font-size:14px;">⚙️ Options globales</h4>
+
+        <label>Position des CTA (overlay)
+          <select id="ctaPosition">
+            <option value="bottom-center">Bas centré</option>
+            <option value="bottom-right">Bas droite</option>
+            <option value="bottom-left">Bas gauche</option>
+          </select>
+        </label>
+
+        <label>Layout des CTA
+          <select id="ctaLayout">
+            <option value="grid">Grille</option>
+            <option value="stacked">Empilé</option>
+          </select>
+        </label>
+
+        <label>Couleur des boutons
+          <input id="ctaColor" type="color" value="#00e0ff">
+        </label>
+
+        <label>Afficher tous les CTA à la fin (secondes)
+          <input id="ctaShowAllAt" type="number" min="0" value="0">
+        </label>
+
+        <button id="resetCTA" style="margin-top:6px;background:#ff4d4d;color:#fff;border:none;">
+          🗑️ Réinitialiser les CTA
+        </button>
+      </section>
+
+      <!-- POSITION BULLE -->
+<div class="mode-bulle">
+      <section>
+        <h3>📍 Position de la bulle</h3>
+        <div class="btn-row">
+          <button data-pos="TL">TL</button>
+          <button data-pos="TR">TR</button>
+          <button data-pos="BL">BL</button>
+          <button data-pos="BR">BR</button>
+        </div>
+      </section>
+</div>
+      <!-- EXPORT -->
+      <section>
+        <h3>📤 Export</h3>
+        <div class="btn-row">
+          <button id="open" class="accent">Ouvrir</button>
+          <button id="close">Fermer</button>
+          <button id="download">Télécharger JSON</button>
+          <button id="snippet">Copier Snippet</button>
+          <button id="resetLocal" style="background:#ff4d4d;color:#fff;border:none;">
+            🗑️ Effacer sauvegarde locale
+          </button>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- PREVIEW FLOTTANTE -->
+    <div class="preview-panel">
+      <iframe id="pv" src="/public/preview.html?cb=1"></iframe>
+
+    </div>
+  </main>
+
+  <!-- TOASTS -->
+  <script>
+    const toastContainer = document.createElement("div");
+    toastContainer.id = "toastContainer";
+    document.body.appendChild(toastContainer);
+
+    function toast(msg, type = "info") {
+      const t = document.createElement("div");
+      t.className = "toast";
+      t.textContent = msg;
+      t.style.background =
+        type === "success" ? "linear-gradient(90deg,#00e0ff,#00b3ff)" :
+        type === "error"   ? "linear-gradient(90deg,#ff4d4d,#ff0000)" :
+                             "linear-gradient(90deg,#555,#333)";
+
+      toastContainer.appendChild(t);
+
+      requestAnimationFrame(() => {
+        t.style.opacity = "1";
+        t.style.transform = "translateY(0)";
+      });
+
+      setTimeout(() => {
+        t.style.opacity = "0";
+        t.style.transform = "translateY(-10px)";
+        setTimeout(() => t.remove(), 400);
+      }, 3000);
+    }
+  </script>
+
+  <!-- LOGIQUE BUILDER (cb-builder) -->
+  <script src="/public/cb-builder.js"></script>
+<script src="/cb.js"></script>
+
+
+
+  <script>
+    // Thème clair / sombre
+    const toggle = document.getElementById("themeToggle");
+    const body = document.body;
+    toggle.onclick = () => {
+      const dark = body.getAttribute("data-theme") === "dark";
+      body.setAttribute("data-theme", dark ? "light" : "dark");
+      toggle.textContent = dark ? "🌙" : "☀️";
+    };
+
+    const iframe        = document.getElementById("pv");
+
+    // === ÉTAT LOCAL CTA ===
+    let ctas    = [];
+    let ctaMode = "fixed";
+
+    const ctaList    = document.getElementById("ctaList");
+    const ctaPosSel  = document.getElementById("ctaPosition");
+    const ctaLayout  = document.getElementById("ctaLayout");
+    const ctaColor   = document.getElementById("ctaColor");
+    const ctaShowAll = document.getElementById("ctaShowAllAt");
+
+    const bubbleBg     = document.getElementById("bubbleBg");
+    const borderColor  = document.getElementById("borderColor");
+    const borderWidth  = document.getElementById("borderWidth");
+    const shapeSel     = document.getElementById("shape");
+    const animationSel = document.getElementById("animation");
+    const fontFamily   = document.getElementById("fontFamily");
+    const fontSize     = document.getElementById("fontSize");
+    const fontSizeVal  = document.getElementById("fontSizeValue");
+    const captionText  = document.getElementById("captionText");
+
+
+    const brandLabel = document.getElementById("brandLabel");
+    const brandColor = document.getElementById("brandColor");
+    const videoUrl   = document.getElementById("videoUrl");
+    const poster     = document.getElementById("poster");
+
+    const btnAddCTA     = document.getElementById("addCTA");
+    const btnResetCTA   = document.getElementById("resetCTA");
+    const btnOpen       = document.getElementById("open");
+    const btnClose      = document.getElementById("close");
+    const btnDownload   = document.getElementById("download");
+    const btnSnippet    = document.getElementById("snippet");
+    const btnResetLocal = document.getElementById("resetLocal");
+
+    // Mapping des formes du select -> theme.shape + dimensions bulle
+    const SHAPES = {
+      horizontal: { shape: "rounded-rect", bubble: { width: 180, height: 100 } },
+      circle:     { shape: "circle",       bubble: { width: 120, height: 160 } },
+      square:     { shape: "rounded-rect", bubble: { width: 140, height: 140 } },
+      vertical:   { shape: "rounded-rect", bubble: { width: 120, height: 170 } },
+      portrait:   { shape: "rounded-rect", bubble: { width: 130, height: 190 } },
+      badge: { shape: "badge", bubble: { width: 160, height: 170 } },
+    };
+
+    function shapeFromConfig(cfg) {
+      const t = cfg.theme || {};
+      const b = t.bubble || {};
+
+      if (t.shape === "circle") return "circle";
+      if (b.width && b.height) {
+        const r = b.width / b.height;
+        if (r > 1.3) return "horizontal";
+        if (r < 0.77) return "vertical";
+        if (Math.abs(r - 1) < 0.2) return "square";
+      }
+      return "horizontal";
+    }
+
+    function pushCTAConfig() {
+      const timing = {
+        sequence:
+          ctaMode === "timed"
+            ? ctas.map((cta, idx) => ({
+                index: idx,
+                showAt: Number(cta.showAt) || 0,
+                duration: Number(cta.duration) || 5,
+              }))
+            : [],
+        showAllAt: ctaMode === "timed" ? Number(ctaShowAll.value) || 0 : 0,
+      };
+
+      Builder.update({
+        ctaMode,
+        ctas: ctas.map(({ label, href, style }) => ({
+          label,
+          href,
+          style,
+        })),
+        timing,
+        ctaOverlay: {
+          position: ctaPosSel.value,
+          layout: ctaLayout.value,
+          buttonColor: ctaColor.value || undefined,
+        },
+      });
+    }
+
+    function renderCTAList() {
+      ctaList.innerHTML = "";
+      ctas.forEach((cta, i) => {
+        const row = document.createElement("div");
+        row.className = "cta-item";
+        row.innerHTML = `
+          <input type="text" placeholder="Label" value="${cta.label || ""}" data-i="${i}" data-k="label">
+          <input type="url" placeholder="Lien" value="${cta.href || ""}" data-i="${i}" data-k="href">
+          <select data-i="${i}" data-k="style">
+            <option value="primary"   ${cta.style === "primary" ? "selected" : ""}>primary</option>
+            <option value="secondary" ${cta.style === "secondary" ? "selected" : ""}>secondary</option>
+            <option value="outline"   ${cta.style === "outline" ? "selected" : ""}>outline</option>
+            <option value="ghost"     ${cta.style === "ghost" ? "selected" : ""}>ghost</option>
+          </select>
+          <input type="number" min="0"  placeholder="showAt" value="${cta.showAt ?? 0}"   data-i="${i}" data-k="showAt">
+          <input type="number" min="1"  placeholder="durée"  value="${cta.duration ?? 5}" data-i="${i}" data-k="duration">
+          <button data-del="${i}">🗑</button>
+        `;
+        ctaList.appendChild(row);
+      });
+
+      pushCTAConfig();
+    }
+
+    // === INIT BUILDER / PREVIEW ===
+    (async function () {
+      // init cb-builder
+      await Builder.init({ iframe });
+
+      // On demande à la preview sa config actuelle
+      setTimeout(() => {
+        try {
+          iframe.contentWindow.postMessage({ type: "cb:request_config" }, "*");
+        } catch (e) {
+          console.warn("Impossible d’envoyer cb:request_config", e);
+        }
+      }, 800);
+
+      // Réception de la config initiale depuis la preview (config.json)
+      window.addEventListener("message", (ev) => {
+        if (ev.data?.type !== "cb:config_init") return;
+
+        const cfg = ev.data.payload;
+        if (!cfg) return;
+
+        console.log("📥 Config reçue depuis la preview :", cfg);
+
+        Builder.replace(cfg);
+
+        const theme    = cfg.theme   || {};
+        const border   = theme.border || {};
+        const caption  = theme.caption || {};
+        const video    = cfg.video   || {};
+        const branding = cfg.branding || {};
+
+        bubbleBg.value    = theme.primary || "#ff0055";
+        borderColor.value = border.color  || "#ffffff";
+        borderWidth.value = border.width ?? 2;
+
+        const shapeKey = shapeFromConfig(cfg);
+        shapeSel.value = shapeKey;
+
+        animationSel.value = cfg.animation || "none";
+
+        fontFamily.value   = caption.fontFamily || theme.fontFamily || "Poppins, system-ui, sans-serif";
+        fontSize.value     = caption.fontSize || 15;
+        fontSizeVal.textContent = (caption.fontSize || 15) + "px";
+        captionText.value = caption.text || "";
+
+        brandLabel.value = branding.label || "";
+        brandColor.value = branding.color || "#ff0055";
+
+        videoUrl.value = video.src    || "";
+        poster.value   = video.poster || "";
+
+        // CTA init
+        ctaMode = cfg.ctaMode || "fixed";
+        document
+          .querySelectorAll("input[name='ctaMode']")
+          .forEach((r) => {
+            r.checked = r.value === ctaMode;
+          });
+
+        ctas = Array.isArray(cfg.ctas)
+          ? cfg.ctas.map((c, idx) => ({
+              label: c.label || "",
+              href:  c.href  || "",
+              style: c.style || "primary",
+              showAt:
+                (cfg.timing?.sequence?.find((s) => s.index === idx) || {})
+                  .showAt ?? 0,
+              duration:
+                (cfg.timing?.sequence?.find((s) => s.index === idx) || {})
+                  .duration ?? 5,
+            }))
+          : [];
+
+        ctaPosSel.value = cfg.ctaOverlay?.position || "bottom-center";
+        ctaLayout.value = cfg.ctaOverlay?.layout   || "grid";
+        if (cfg.ctaOverlay?.buttonColor) {
+          ctaColor.value = cfg.ctaOverlay.buttonColor;
+        }
+        ctaShowAll.value = cfg.timing?.showAllAt ?? 0;
+
+        renderCTAList();
+        toast("✅ Config synchronisée avec la bulle démo", "success");
+      });
+    })();
+
+    // ====== LISTENERS THÈME / BRANDING / VIDÉO ======
+    bubbleBg.addEventListener("input", (e) => {
+      Builder.update({ theme: { primary: e.target.value } });
+    });
+
+    borderColor.addEventListener("input", (e) => {
+      Builder.update({ theme: { border: { color: e.target.value } } });
+    });
+
+    borderWidth.addEventListener("change", (e) => {
+      Builder.update({ theme: { border: { width: Number(e.target.value) || 0 } } });
+    });
+
+    shapeSel.addEventListener("change", (e) => {
+      const preset = SHAPES[e.target.value] || SHAPES.horizontal;
+      Builder.update({ theme: { shape: preset.shape, bubble: preset.bubble } });
+    });
+
+    animationSel.addEventListener("change", (e) => {
+      Builder.update({ animation: e.target.value });
+    });
+
+        fontFamily.addEventListener("change", (e) => {
+      const value = e.target.value;
+      Builder.update({
+        theme: {
+          fontFamily: value,
+          caption: {
+            fontFamily: value,
+          },
+        },
+      });
+    });
+
+
+    fontSize.addEventListener("input", (e) => {
+  const v = Number(e.target.value) || 15;
+  fontSizeVal.textContent = v + "px";
+  Builder.update({ theme: { caption: { fontSize: v } } });
+});
+
+captionText.addEventListener("input", (e) => {
+  Builder.update({
+    theme: { caption: { text: e.target.value } }
+  });
+});
+
+    brandLabel.addEventListener("input", (e) => {
+      Builder.update({
+        branding: {
+          label: e.target.value,
+          enabled: true,
+          color: brandColor.value,
+        },
+      });
+    });
+
+    brandColor.addEventListener("input", (e) => {
+      Builder.update({
+        branding: {
+          color: e.target.value,
+          label: brandLabel.value || "ConvertBubble",
+        },
+      });
+    });
+
+    videoUrl.addEventListener("change", (e) => {
+      Builder.update({ video: { src: e.target.value, poster: poster.value } });
+    });
+
+    poster.addEventListener("change", (e) => {
+      Builder.update({ video: { src: videoUrl.value, poster: e.target.value } });
+    });
+
+    // ====== CTA HANDLERS ======
+    btnAddCTA.onclick = () => {
+      if (ctas.length >= 4) {
+        toast("⚠️ Maximum 4 CTA", "error");
+        return;
+      }
+      ctas.push({
+        label: "Nouveau CTA",
+        href: "https://",
+        style: "primary",
+        showAt: 0,
+        duration: 5,
+      });
+      renderCTAList();
+      toast("CTA ajouté", "success");
+    };
+
+    btnResetCTA.onclick = () => {
+      ctas = [];
+      renderCTAList();
+      toast("CTA réinitialisés", "success");
+    };
+
+    ctaList.addEventListener("input", (e) => {
+      const i = e.target.dataset.i;
+      const k = e.target.dataset.k;
+      if (i === undefined || k === undefined) return;
+
+      if (k === "showAt" || k === "duration") {
+        ctas[i][k] = Number(e.target.value) || 0;
+      } else {
+        ctas[i][k] = e.target.value;
+      }
+      pushCTAConfig();
+    });
+
+    ctaList.addEventListener("click", (e) => {
+      const del = e.target.dataset.del;
+      if (del !== undefined) {
+        ctas.splice(Number(del), 1);
+        renderCTAList();
+      }
+    });
+
+    document.querySelectorAll("input[name='ctaMode']").forEach((r) => {
+      r.addEventListener("change", () => {
+        ctaMode = r.value;
+        pushCTAConfig();
+      });
+    });
+
+    [ctaPosSel, ctaLayout, ctaColor, ctaShowAll].forEach((el) => {
+      el.addEventListener("change", pushCTAConfig);
+      el.addEventListener("input", pushCTAConfig);
+    });
+
+    // POSITION BULLE
+    document.querySelectorAll("[data-pos]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        Builder.update({ position: btn.dataset.pos });
+      });
+    });
+
+    // EXPORT & OVERLAY
+    btnOpen.addEventListener("click", () => Builder.openOverlay());
+    btnClose.addEventListener("click", () => Builder.closeOverlay());
+
+    btnDownload.addEventListener("click", () => Builder.downloadJSON());
+    btnSnippet.addEventListener("click", () => Builder.copySnippet());
+
+    btnResetLocal.addEventListener("click", () => {
+      localStorage.removeItem("convertbubble-builder");
+      toast("Sauvegarde locale effacée", "success");
+      setTimeout(() => location.reload(), 800);
+    });
+  </script>
+<script>
+  const dropZone = document.getElementById("launchDropZone");
+  const fileInput = document.getElementById("launchFileInput");
+  const launchSrc = document.getElementById("launchSrc");
+
+  // Click → file picker
+  dropZone.onclick = () => fileInput.click();
+
+  // File picker → src = blob
+  fileInput.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const blobURL = URL.createObjectURL(file);
+    launchSrc.value = blobURL;
+    triggerLauncherUpdate();
+  };
+
+  // Drag over
+  dropZone.ondragover = e => {
+    e.preventDefault();
+    dropZone.style.opacity = 1;
+  };
+
+  // Drag leave
+  dropZone.ondragleave = () => dropZone.style.opacity = .7;
+
+  // Drop file
+  dropZone.ondrop = e => {
+    e.preventDefault();
+    dropZone.style.opacity = .7;
+
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    const blobURL = URL.createObjectURL(file);
+    launchSrc.value = blobURL;
+    triggerLauncherUpdate();
+  };
+
+  function triggerLauncherUpdate() {
+    Builder.update({
+      launcherContent: {
+        type: document.getElementById("launchType").value,
+        src: launchSrc.value,
+        alt: document.getElementById("launchAlt").value,
+        previewSeconds: Number(document.getElementById("previewSeconds").value || 3)
+      }
+    });
+  }
+
+  document.getElementById("launchType").onchange = triggerLauncherUpdate;
+  document.getElementById("launchAlt").oninput = triggerLauncherUpdate;
+  document.getElementById("previewSeconds").oninput = triggerLauncherUpdate;
+  launchSrc.oninput = triggerLauncherUpdate;
+</script>
+<!-- SCRIPT TOGGLE BULLE / PLAYER -->
+<script>
+  (function () {
+    const btnBubble = document.getElementById("modeBubble");
+    const btnPlayer = document.getElementById("modePlayer");
+    const panelCta = document.getElementById("panelCta");
+
+    // Sécurité : si un des éléments manque, on ne fait rien
+    if (!btnBubble || !btnPlayer || !panelCta) return;
+
+    function setMode(mode) {
+  const bubbleSections = document.querySelectorAll(".mode-bulle");
+  const playerSections = document.querySelectorAll(".mode-player");
+
+  if (mode === "bubble") {
+    bubbleSections.forEach(s => s.style.display = "");
+    playerSections.forEach(s => s.style.display = "none");
+
+    btnBubble.classList.add("accent");
+    btnPlayer.classList.remove("accent");
+  } else {
+    bubbleSections.forEach(s => s.style.display = "none");
+    playerSections.forEach(s => s.style.display = "");
+
+    btnPlayer.classList.add("accent");
+    btnBubble.classList.remove("accent");
+  }
+}
+
+    btnBubble.addEventListener("click", () => setMode("bubble"));
+    btnPlayer.addEventListener("click", () => setMode("player"));
+
+    // Mode initial = Bulle
+    setMode("bubble");
+  })();
+</script>
+</body>
+</html>
+

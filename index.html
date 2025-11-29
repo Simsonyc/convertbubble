@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ConvertBubble — page de test</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin:0; }
+    header { padding: 32px 20px; background: #0f172a; color: #fff; }
+    main { padding: 24px 20px; max-width: 900px; margin: auto; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p.lead { opacity:.85; margin:0; }
+    .card { margin-top:20px; padding:16px; border:1px solid #e5e7eb; border-radius:12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ConvertBubble — démo locale</h1>
+    <p class="lead">Clique la bulle en bas à droite pour ouvrir la vidéo en surimpression.</p>
+  </header>
+  <main>
+    <div class="card">
+      <p>
+        Ceci est un simple contenu de page pour tester que la bulle n'interfère pas avec le layout.
+        Tu peux scroller, puis revenir en haut — la bulle reste visible.
+      </p>
+      <p>Ajoute ta vidéo dans <code>videos/demo.mp4</code> puis recharge la page.</p>
+    </div>
+    <div style="height:1200px"></div>
+  </main>
+
+  <!-- Charge la bulle avec version pour casser le cache -->
+  <script src="./cb.js?v=overlay2" data-config="./config.json" defer></script>
+</body>
+</html>

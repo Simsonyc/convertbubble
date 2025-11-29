@@ -1,0 +1,61 @@
+{
+  "theme": {
+    "primary": "#ff0055",
+    "border": {
+      "color": "#ff0055",
+      "width": 2
+    },
+    "bubble": {
+      "width": 160,
+      "height": 160
+    },
+    "shape": "circle",
+    "caption": {
+      "text": "Regarde la vidéo 👇",
+      "color": "#ffffff",
+      "fontSize": 14,
+      "fontFamily": "Poppins"
+    },
+    "fontFamily": "Poppins"
+  },
+
+  "animation": "pulse",
+
+  "launcherContent": {
+    "type": "videoPreview",
+    "src": "https://convertbubble-cdn.vercel.app/assets/convertbubble-default.mp4",
+    "previewSeconds": 3
+  },
+
+  "position": "BR",
+
+  "video": {
+    "src": "https://convertbubble-cdn.vercel.app/assets/convertbubble-default.mp4",
+    "poster": "https://convertbubble-cdn.vercel.app/assets/convertbubble-default.jpg"
+  },
+
+  "ctaMode": "timed",
+
+  "ctas": [
+    { "label": "Découvrir l’offre", "href": "https://boostandgrow.fr" },
+    { "label": "Voir la démo", "href": "https://convertbubble.com" },
+    { "label": "Essai gratuit", "href": "https://boostandgrow.fr/demo" },
+    { "label": "Contact", "href": "https://boostandgrow.fr/contact" }
+  ],
+
+  "timing": {
+    "sequence": [
+      { "index": 0, "showAt": 3, "duration": 5 },
+      { "index": 1, "showAt": 10, "duration": 5 },
+      { "index": 2, "showAt": 17, "duration": 5 }
+    ],
+    "showAllAt": 25
+  },
+
+  "ctaOverlay": {
+    "position": "bottom-center",
+    "layout": "grid",
+    "buttonColor": "#00e0ff"
+  }
+}
+

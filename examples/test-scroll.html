@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Test Scroll ConvertBubble</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
+    }
+    section {
+      height: 200vh; /* 👈 2 hauteurs d’écran = scroll long */
+      background: linear-gradient(180deg, #0b0b14, #20203a);
+      padding: 50px;
+    }
+    h1 {
+      font-size: 28px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <section>
+    <h1>🧩 Test de bulle flottante ConvertBubble</h1>
+    <p>Scrolle vers le bas… la bulle doit rester en bas à droite.</p>
+  </section>
+
+  <!-- Ton script ConvertBubble -->
+  <script src="../cb.js" defer></script>
+</body>
+</html>

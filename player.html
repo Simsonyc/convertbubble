@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html, body { height:100%; }
+
+body {
+  margin:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: var(--overlay);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
+
+.wrap {
+  width:min(920px, 92vw);
+}
+
+.card {
+  position: relative;
+  background:#0b1020;
+  color:#fff;
+  padding:14px;
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.close {
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:40px;
+  height:40px;
+  border-radius: 12px;
+  border:none;
+  cursor:pointer;
+  background: rgba(255,255,255,.1);
+  color:#fff;
+  font-size:22px;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.close:hover { background: rgba(255,255,255,.18); }
+
+
+/* ---------------------------
+   FIX 100% POUR MOBILE
+   --------------------------- */
+.video {
+  width:100%;
+  aspect-ratio: 16/9;
+  background:#000;
+  border-radius: 10px;
+  overflow:hidden;           /* 🔥 Empêche tout débordement */
+}
+
+video {
+  width:100%;
+  height:100%;
+  display:block;
+
+  object-fit: cover;         /* 🔥 Remplit parfaitement le cadre */
+  object-position: center;   /* 🔥 Centrage parfait */
+  border-radius: inherit;    /* 🔥 Suit le rayon parent */
+  
+  overflow: hidden;          /* 🔥 Clipping Android */
+  clip-path: inset(0);       /* 🔥 Clipping rendu GPU */
+  transform: translateZ(0);  /* 🔥 Fix Chrome Android (GPU) */
+}
+
+
+.ctas {
+  display:flex;
+  gap:12px;
+  margin-top:12px;
+  flex-wrap:wrap;
+}
+
+.cta {
+  flex:1 1 180px;
+  text-align:center;
+  text-decoration:none;
+  padding:14px 16px;
+  border-radius: 10px;
+  background: var(--primary);
+  color:#fff;
+  font-weight:600;
+  border: 1px solid rgba(255,255,255,.1);
+}
+
+.cta:hover { filter: brightness(1.06); }
+
+.hint {
+  color: #cbd5e1;
+  font-size:12px;
+  margin-top:10px;
+  opacity:.8;
+  text-align:center;
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+<div class="card" role="dialog" aria-label="Vidéo et appels à l'action">
+
+<button class="close" aria-label="Fermer">×</button>
+
+<div class="video">
+  <video id="vid" autoplay controls playsinline src="videos/demo.mp4"></video>
+</div>
+
+<div class="ctas">
+  <a class="cta" target="_top" rel="noopener" href="https://example.com/checkout">🛒 Acheter</a>
+  <a class="cta" target="_top" rel="noopener" href="https://example.com/info">ℹ️ En savoir plus</a>
+</div>
+
+<div class="hint">
+  Astuce : appuie sur <kbd>Échap</kbd> pour fermer rapidement.
+</div>
+
+</div>
+</div>
+
+<script>
+// Bouton fermer → demande au parent de replier l'overlay
+document.querySelector('.close').addEventListener('click', function(){
+  try { window.parent.postMessage('videoBubble:collapse', '*'); } catch(e) {}
+});
+
+// Touche Échap → fermer
+window.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') {
+    try { window.parent.postMessage('videoBubble:collapse', '*'); } catch(e) {}
+  }
+});
+</script>
+
+</body>
+</html>

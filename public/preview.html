@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>ConvertBubble – Live Preview</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- IMPORTANT : fonctionne en LOCAL ET VERCEL -->
+  <script src="/cb.js" data-config="/public/config.json"></script>
+
+  <script>
+    console.log("🔮 Preview connecté au Builder");
+
+    window.addEventListener("message", (ev) => {
+      const data = ev.data;
+      if (!data?.type) return;
+
+      if (data.type === "cb:init" || data.type === "cb:update") {
+        const cfg = data.payload;
+        if (!cfg) return;
+
+        console.log("📥 Config reçue du Builder :", cfg);
+
+        document.querySelectorAll(
+          ".convertbubble-wrapper, .cb-overlay, #convertbubble-floating-wrapper"
+        ).forEach(el => el.remove());
+
+        if (window.ConvertBubble?.reload) {
+          window.ConvertBubble.reload(cfg);
+        } else if (window.ConvertBubble?.init) {
+          window.ConvertBubble.init(cfg);
+        }
+      }
+
+      if (data.type === "cb:request_config") {
+  fetch("/public/config.json", { cache: "no-store" })
+    .then(r => r.json())
+    .then(json => {
+      ev.source.postMessage(
+        { type: "cb:config_init", payload: json },
+        "*"
+      );
+    });
+}
+
+    });
+  </script>
+
+</body>
+</html>
+
+
