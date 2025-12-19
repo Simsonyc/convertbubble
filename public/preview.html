@@ -18,7 +18,7 @@
 <body>
 
   <!-- IMPORTANT : fonctionne en LOCAL ET VERCEL -->
-  <script src="/cb.js" data-config="/public/config.json"></script>
+  <script src="/public/cb.js" data-config="/public/config.json"></script>
 
   <script>
     console.log("🔮 Preview connecté au Builder");
@@ -45,7 +45,7 @@
       }
 
       if (data.type === "cb:request_config") {
-  fetch("/public/config.json", { cache: "no-store" })
+  fetch("../config.json", { cache: "no-store" })
     .then(r => r.json())
     .then(json => {
       ev.source.postMessage(
