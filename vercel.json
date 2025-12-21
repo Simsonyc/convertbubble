@@ -6,7 +6,8 @@
     { "src": "examples/*", "use": "@vercel/static" },
     { "src": "public/**/*", "use": "@vercel/static" }
   ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/$1" }
+  "rewrites": [
+    { "source": "/cb.js", "destination": "/public/cb.js" },
+    { "source": "/config.json", "destination": "/public/config.json" }
   ]
 }
