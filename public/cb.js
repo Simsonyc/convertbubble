@@ -6,7 +6,7 @@
 // ===============================
 // 🔧 ÉTAT INTERNE (LIVE RELOAD)
 // ===============================
-let bubbleEl = null;
+let bubbleEl = null; // (laissé en place pour compat, non utilisé ici)
 let currentConfig = null;
 
 (function () {
@@ -23,6 +23,20 @@ let currentConfig = null;
     link.href =
       "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap";
     document.head.appendChild(link);
+  })();
+
+  // --------------------------------------------------------
+  // Anim CSS (inject 1 fois)
+  // --------------------------------------------------------
+  (function injectAnimCSS() {
+    if (document.getElementById("cb-anim-css")) return;
+    const style = document.createElement("style");
+    style.id = "cb-anim-css";
+    style.textContent = `
+      @keyframes cb-bounce { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-6px);} }
+      @keyframes cb-rotate { from{ transform: rotate(0deg);} to{ transform: rotate(360deg);} }
+    `;
+    document.head.appendChild(style);
   })();
 
   // --------------------------------------------------------
@@ -51,53 +65,67 @@ let currentConfig = null;
   // --------------------------------------------------------
   async function createBubble(config) {
     const theme = config.theme || {};
+    const bubble = theme.bubble || {};
     const caption = theme.caption || {};
 
     const wrapper = el("div", {
       position: "relative",
-      width: px(theme.bubble?.width || 180),
+      width: px(bubble.width || 180),
       display: "flex",
       flexDirection: "column",
       overflow: "hidden",
-      borderRadius: "16px",
+
+      // ✅ border / radius pilotés par config
+      borderRadius: px(bubble.radius || 16),
+      border: `${bubble.borderWidth || 0}px solid ${bubble.borderColor || "transparent"}`,
+
       background: theme.primary || "#ff0055",
       boxShadow: "0 12px 30px rgba(0,0,0,0.28)",
       cursor: "pointer",
-      fontFamily: "Poppins, sans-serif",
+
+      // ✅ police pilotée par caption.fontFamily
+      fontFamily: caption.fontFamily || "Poppins, sans-serif",
+
       userSelect: "none",
     });
 
     wrapper.className = "convertbubble-wrapper";
 
-    // 🔹 ZONE LAUNCHER (vidéo OU fond noir, mais contenue)
-const launcher = el("div", {
-  width: "100%",
-  height: px(theme.bubble?.launcherHeight || 120),
-  background: "#000",
-  overflow: "hidden",
-  position: "relative",
-});
-if (config.launcherContent?.src) {
-  const video = document.createElement("video");
-  video.src = config.launcherContent.src;
-  video.muted = true;
-  video.autoplay = true;
-  video.loop = true;
-  video.playsInline = true;
+    // ✅ animation pilotée par theme.animation
+    wrapper.style.animation = "none";
+    if (theme.animation === "bounce") wrapper.style.animation = "cb-bounce 1.4s infinite";
+    if (theme.animation === "rotation") wrapper.style.animation = "cb-rotate 4s linear infinite";
 
-  Object.assign(video.style, {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-  });
+    // 🔹 ZONE LAUNCHER (vidéo OU fond noir, contenue)
+    const launcher = el("div", {
+      width: "100%",
+      height: px(bubble.launcherHeight || 120),
+      background: "#000",
+      overflow: "hidden",
+      position: "relative",
+    });
 
-  launcher.appendChild(video);
-}
+    // ✅ Stopper les 404 "default"
+    const lsrc = config.launcherContent?.src;
 
-   
+    if (lsrc && !lsrc.includes("default")) {
+      const video = document.createElement("video");
+      video.src = lsrc;
+      video.muted = true;
+      video.autoplay = true;
+      video.loop = true;
+      video.playsInline = true;
 
-  wrapper.appendChild(launcher);
+      Object.assign(video.style, {
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+      });
 
+      launcher.appendChild(video);
+    }
+
+    wrapper.appendChild(launcher);
 
     if (caption.text) {
       const cap = el("div", {
@@ -105,6 +133,8 @@ if (config.launcherContent?.src) {
         textAlign: "center",
         fontSize: (caption.fontSize || 14) + "px",
         color: caption.color || "#fff",
+        // ✅ même police sur l’encart texte
+        fontFamily: caption.fontFamily || "Poppins, sans-serif",
       });
       cap.textContent = caption.text;
       wrapper.appendChild(cap);
@@ -145,8 +175,6 @@ if (config.launcherContent?.src) {
   // --------------------------------------------------------
   // MOUNT / RELOAD (wrapper fixed unique)
   // --------------------------------------------------------
-  
-
   async function mount(config) {
     currentConfig = config || {};
 
@@ -209,6 +237,7 @@ if (config.launcherContent?.src) {
     await mount(config);
   })();
 })();
+
 
 
 
