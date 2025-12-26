@@ -1094,6 +1094,11 @@ captionText.addEventListener("input", (e) => {
 <script>
   window.addEventListener("DOMContentLoaded", async () => {
     await Builder.init();
+
+    // 🔥 PATCH FINAL — mount initial de la bulle
+    if (window.ConvertBubble) {
+      window.ConvertBubble.reload(Builder.getConfig());
+    }
   });
 </script>
 
