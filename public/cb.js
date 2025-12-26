@@ -1,187 +1,157 @@
-// ==========================================================
-//  ConvertBubble Player V4.5 — VERSION STABLE & SAFE
-//  ➜ UNE SEULE BULLE
-//  ➜ JAMAIS EN PREVIEW
-// ==========================================================
+(function(){
+  console.log("✅ cb.js initialisé (overlay CTA actif)");
 
-(function () {
-  console.log("DEBUG — CB.JS chargé");
+  // ==== UTILITAIRES ====
+  function el(tag,style){const e=document.createElement(tag);if(style)Object.assign(e.style,style);return e;}
+  function px(n){return typeof n==="number"?n+"px":n;}
+  function toRgba(color,alpha=1){alpha=Math.max(0,Math.min(1,alpha));
+    if(!color)return`rgba(255,0,85,${alpha})`;
+    const hex=color.replace("#","").trim();
+    if(/^([0-9a-f]{3}){1,2}$/i.test(hex)){
+      const full=hex.length===3?hex.split("").map(x=>x+x).join(""):hex;
+      const r=parseInt(full.substr(0,2),16),g=parseInt(full.substr(2,2),16),b=parseInt(full.substr(4,2),16);
+      return`rgba(${r},${g},${b},${alpha})`;
+    }
+    if(color.startsWith("rgb")) return color.replace(")",`,${alpha})`).replace("rgb","rgba");
+    return color;
+  }
 
-  // --------------------------------------------------------
-  // ⛔️ BLOCAGE ABSOLU EN PREVIEW / BUILDER
-  // --------------------------------------------------------
-  if (
-  window.__CB_PREVIEW_SUPPRESS_RENDER__ &&
-  window.__CB_CONTEXT__ !== "builder-preview"
-) {
-  console.log("🧊 CB.JS bloqué (mode preview)");
-  return;
-}
+  async function loadConfig(){
+    const url=(document.currentScript&&document.currentScript.dataset.config)||"config.json";
+    const res=await fetch(url,{cache:"no-store"});
+    if(!res.ok)throw new Error("Config introuvable: "+res.status);
+    return await res.json();
+  }
 
-  // --------------------------------------------------------
-  // Fonts
-  // --------------------------------------------------------
-  (function loadFonts() {
-    if (document.getElementById("convertbubble-fonts")) return;
-    const link = document.createElement("link");
-    link.id = "convertbubble-fonts";
-    link.rel = "stylesheet";
-    link.href =
-      "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap";
-    document.head.appendChild(link);
+  // ==== NETTOYAGE GLOBAL ====
+  function clearAll(){
+    document.querySelectorAll('[data-cb-root]').forEach(el=>el.remove());
+    document.querySelectorAll('.cb-overlay').forEach(el=>el.remove());
+    document.getAnimations().forEach(a=>{ try{a.cancel();}catch{} });
+  }
+
+  // ==== ANIMATION UNIQUE PAR ÉLÉMENT ====
+  const activeAnim = new WeakMap();
+  function applyAnimation(node,type){
+    const prev = activeAnim.get(node);
+    if(prev && prev.cancel) try{prev.cancel();}catch{}
+    if(!type || type==="none"){ activeAnim.delete(node); return; }
+
+    let a;
+    if(type==="pulse")
+      a=node.animate([{transform:"scale(1)"},{transform:"scale(1.06)"},{transform:"scale(1)"}],
+                     {duration:1200,iterations:Infinity,easing:"ease-in-out"});
+    else if(type==="bounce")
+      a=node.animate([{transform:"translateY(0)"},{transform:"translateY(-6px)"},{transform:"translateY(0)"}],
+                     {duration:900,iterations:Infinity,easing:"ease-in-out"});
+    activeAnim.set(node,a);
+  }
+
+  // ==== CRÉATION DE LA BULLE ====
+  function createBubble(config){
+    clearAll(); // 🔥 efface tout avant de recréer
+
+    const theme=config.theme||{}, bubble=theme.bubble||{}, cap=theme.caption||{};
+    const shape=theme.shape||"circle", pos=config.position||"BR", anim=config.animation||"none";
+    const bw=Math.max(bubble.width||120,120), bh=bubble.height||120, maxF=cap.maxFraction||0.5;
+
+    const w=el("div",{position:"fixed",zIndex:2147483646,display:"flex",alignItems:"center",justifyContent:"center",
+      cursor:"pointer",userSelect:"none",background:theme.primary||"#ff0055",color:cap.color||"#fff",
+      border:(theme.border?.width||0)+"px solid "+(theme.border?.color||"transparent"),
+      borderRadius:shape==="circle"?"50%":"14px",boxShadow:"0 10px 20px rgba(0,0,0,.18)",overflow:"hidden"});
+    w.setAttribute("data-cb-root","1");
+
+    if(cap.position==="left"||cap.position==="right"){
+      w.style.width=px(bw+bw*maxF);w.style.height=px(bh);
+      w.style.flexDirection=cap.position==="left"?"row-reverse":"row";
+    }else{
+      w.style.width=px(bw);w.style.height=px(bh+bh*maxF);
+      w.style.flexDirection=cap.position==="top"?"column-reverse":"column";
+    }
+
+    const content=el("div",{width:px(bw),height:px(bh),display:"flex",alignItems:"center",justifyContent:"center"});
+    const lc=config.launcherContent||{type:"emoji",emoji:"▶"};
+    if(lc.type==="image"){const img=el("img",{width:"100%",height:"100%",objectFit:"cover"});img.src=lc.src||"";content.appendChild(img);}
+    else if(lc.type==="videoPreview"){const v=el("video",{width:"100%",height:"100%",objectFit:"cover"});v.src=lc.src||"";v.muted=!0;v.autoplay=!0;v.playsInline=!0;v.loop=!1;content.appendChild(v);}
+    else{const icon=el("div",{fontSize:"34px"});icon.textContent=lc.emoji||"▶";content.appendChild(icon);}
+    w.appendChild(content);
+
+    if(cap.text){const c=el("div",{flex:"1",padding:"4px 6px",fontSize:(cap.fontSize||13)+"px",textAlign:"center",color:cap.color||"#fff"});c.textContent=cap.text;w.appendChild(c);}
+    const m=18;if(pos.includes("B"))w.style.bottom=px(m);if(pos.includes("T"))w.style.top=px(m);
+    if(pos.includes("R"))w.style.right=px(m);if(pos.includes("L"))w.style.left=px(m);
+
+    applyAnimation(w,anim);
+    return w;
+  }
+
+  // ==== OVERLAY ====
+  function openOverlay(config,wrapper){
+    document.querySelectorAll(".cb-overlay").forEach(o=>o.remove());
+
+    wrapper.style.display="none";
+    const ov=el("div",{position:"fixed",inset:"0",background:`rgba(0,0,0,${config.theme?.overlayOpacity ?? 0.9})`,
+      display:"flex",justifyContent:"center",alignItems:"center",zIndex:10000});
+    ov.classList.add("cb-overlay");
+
+    const box=el("div",{background:"#0b1020",borderRadius:"12px",padding:"16px",maxWidth:"90%",maxHeight:"90%",
+      position:"relative",display:"flex",flexDirection:"column",color:"white",boxShadow:"0 12px 40px rgba(0,0,0,0.5)"});
+    if(config.branding?.enabled){
+      const h=el("div",{background:config.branding.color||"#ff0055",padding:"10px",borderRadius:"8px",marginBottom:"8px",textAlign:"center"});
+      h.textContent=config.branding.label||"";box.appendChild(h);
+    }
+    const v=el("video",{width:"100%",controls:!0,autoplay:!0,playsInline:!0,src:config.video?.src||"",background:"#000",borderRadius:"10px"});
+    box.appendChild(v);ov.appendChild(box);document.body.appendChild(ov);
+    v.play().catch(()=>{});
+  }
+
+  // ==== MOUNT AUTO ====
+  window.createBubble=createBubble;
+  window.openOverlay=openOverlay;
+
+  // 🧩 ÉCOUTEUR POUR COMMANDES DU BUILDER
+  window.addEventListener('message', (e) => {
+    if (!e.data || !e.data.type) return;
+    if (e.data.type === 'cb:clear') {
+      clearAll();
+    }
+  });
+
+  (async function init(){
+    try{
+      const config=await loadConfig();
+      const wrapper=createBubble(config);
+      wrapper.onclick=()=>openOverlay(config,wrapper);
+      document.body.appendChild(wrapper);
+    }catch(e){console.error("❌ Erreur init ConvertBubble:",e);}
   })();
-
-  // --------------------------------------------------------
-  // Utils
-  // --------------------------------------------------------
-  function el(tag, style) {
-    const e = document.createElement(tag);
-    if (style) Object.assign(e.style, style);
-    return e;
-  }
-
-  function px(v) {
-    return typeof v === "number" ? v + "px" : v;
-  }
-
-  async function loadConfig() {
-    const script = document.currentScript;
-    const cfg = script?.getAttribute("data-config");
-    const url = cfg || "/public/config.json";
-    const res = await fetch(url, { cache: "no-store" });
-    return res.json();
-  }
-
-  // --------------------------------------------------------
-  // Création de la bulle
-  // --------------------------------------------------------
-  async function createBubble(config) {
-    const theme = config.theme || {};
-    const caption = theme.caption || {};
-
-    const wrapper = el("div", {
-      position: "relative",
-      width: px(theme.bubble?.width || 180),
-      display: "flex",
-      flexDirection: "column",
-      overflow: "hidden",
-      borderRadius: "16px",
-      background: theme.primary || "#ff0055",
-      boxShadow: "0 12px 30px rgba(0,0,0,0.28)",
-      cursor: "pointer",
-      fontFamily: "Poppins, sans-serif",
-      userSelect: "none"
-    });
-
-    wrapper.className = "convertbubble-wrapper";
-
-    const box = el("div", {
-      width: "100%",
-      height: px(theme.bubble?.height || 120),
-      background: "#000",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
-    });
-
-    if (config.launcherContent?.src) {
-      const v = document.createElement("video");
-      v.src = config.launcherContent.src;
-      v.muted = true;
-      v.autoplay = true;
-      v.loop = true;
-      v.playsInline = true;
-      Object.assign(v.style, {
-        width: "100%",
-        height: "100%",
-        objectFit: "cover"
-      });
-      box.appendChild(v);
-    }
-
-    wrapper.appendChild(box);
-
-    if (caption.text) {
-      const cap = el("div", {
-        padding: "10px",
-        textAlign: "center",
-        fontSize: (caption.fontSize || 14) + "px",
-        color: caption.color || "#fff"
-      });
-      cap.textContent = caption.text;
-      wrapper.appendChild(cap);
-    }
-
-    return wrapper;
-  }
-
-  // --------------------------------------------------------
-  // Overlay
-  // --------------------------------------------------------
-  function openOverlay(config) {
-    if (!config.video?.src) return;
-
-    const overlay = el("div", {
-      position: "fixed",
-      inset: "0",
-      background: "rgba(0,0,0,0.85)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 2147483647
-    });
-
-    const video = document.createElement("video");
-    video.src = config.video.src;
-    video.controls = true;
-    video.autoplay = true;
-    Object.assign(video.style, {
-      maxWidth: "90vw",
-      maxHeight: "90vh"
-    });
-
-    overlay.onclick = () => overlay.remove();
-    overlay.appendChild(video);
-    document.body.appendChild(overlay);
-  }
-
-  // --------------------------------------------------------
-  // INIT — PLAYER SEULEMENT
-  // --------------------------------------------------------
-  (async function init() {
-    const config = await loadConfig();
-
-    let fw = document.getElementById("convertbubble-floating-wrapper");
-    if (!fw) {
-      fw = document.createElement("div");
-      fw.id = "convertbubble-floating-wrapper";
-      Object.assign(fw.style, {
-        position: "fixed",
-        right: "20px",
-        bottom: "20px",
-        zIndex: 2147483646,
-        pointerEvents: "none"
-      });
-      document.body.appendChild(fw);
-    }
-
-    fw.innerHTML = "";
-
-    const bubble = await createBubble(config);
-    bubble.style.pointerEvents = "auto";
-    bubble.onclick = () => openOverlay(config);
-
-    fw.appendChild(bubble);
-  })();
-
 })();
 
+// ==== MODE PREVIEW STABLE ====
+;(() => {
+  try{ if(!/preview\.html$/.test(location.pathname)) return; }catch{return;}
 
+  console.log("🧩 Mode Preview actif – ConvertBubble.mount disponible");
 
+  async function initBubble(config,target=document.body){
+    try{
+      const w=window.createBubble(config);
+      w.onclick=()=>window.openOverlay(config,w);
+      target.appendChild(w);
+      return { destroy(){ w.remove(); clearAll(); } };
+    }catch(e){console.error("Erreur initBubble:",e);}
+  }
 
+  function clearAll(){
+    document.querySelectorAll("[data-cb-root]").forEach(e=>e.remove());
+    document.querySelectorAll(".cb-overlay").forEach(e=>e.remove());
+    document.getAnimations().forEach(a=>{try{a.cancel();}catch{}});
+  }
 
-
-
-
-
-
+  window.ConvertBubble = (() => {
+    let instance=null;
+    function mount(cfg,{target=document.body}={}){ unmount(); instance=initBubble(cfg,target); return instance; }
+    function unmount(){ clearAll(); if(instance&&instance.destroy)instance.destroy(); instance=null; }
+    function reload(cfg){ unmount(); mount(cfg); }
+    return { mount, unmount, reload };
+  })();
+})();
