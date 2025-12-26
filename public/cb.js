@@ -72,6 +72,22 @@ const launcher = el("div", {
   overflow: "hidden",
   position: "relative",
 });
+if (config.launcherContent?.src) {
+  const video = document.createElement("video");
+  video.src = config.launcherContent.src;
+  video.muted = true;
+  video.autoplay = true;
+  video.loop = true;
+  video.playsInline = true;
+
+  Object.assign(video.style, {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+  });
+
+  launcher.appendChild(video);
+}
 
     // IMPORTANT : dans ton config, tu as 2 sources possibles (launcherContent et video)
     // On garde launcherContent en priorité.
