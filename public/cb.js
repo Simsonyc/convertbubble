@@ -3,6 +3,11 @@
 //  ➜ UNE SEULE BULLE (wrapper unique)
 //  ➜ EN BUILDER : pas d'auto-init, le Builder pilote tout
 // ==========================================================
+// ===============================
+// 🔧 ÉTAT INTERNE (LIVE RELOAD)
+// ===============================
+let bubbleEl = null;
+let currentConfig = null;
 
 (function () {
   console.log("DEBUG — CB.JS chargé");
