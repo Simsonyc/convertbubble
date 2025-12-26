@@ -1091,6 +1091,11 @@ captionText.addEventListener("input", (e) => {
   console.log("Builder chargé — aucun cb.js ici");
 </script>
   <script src="/cb.js"></script>
+<script>
+  window.addEventListener("DOMContentLoaded", async () => {
+    await Builder.init();
+  });
+</script>
 
 </body>
 </html>
