@@ -1,22 +1,11 @@
 // ==========================================================
-//  ConvertBubble Player V4.5 — VERSION STABLE & SAFE
-//  ➜ UNE SEULE BULLE
-//  ➜ LIVE RELOAD ACTIVÉ
+//  ConvertBubble Player V4.5 — BUILDER-MASTER
+//  ➜ UNE SEULE BULLE (wrapper unique)
+//  ➜ EN BUILDER : pas d'auto-init, le Builder pilote tout
 // ==========================================================
 
 (function () {
   console.log("DEBUG — CB.JS chargé");
-
-  // --------------------------------------------------------
-  // ⛔️ BLOCAGE CONTRÔLÉ EN PREVIEW
-  // --------------------------------------------------------
-  if (
-    window.__CB_PREVIEW_SUPPRESS_RENDER__ &&
-    window.__CB_CONTEXT__ !== "builder-preview"
-  ) {
-    console.log("🧊 CB.JS bloqué (mode preview)");
-    return;
-  }
 
   // --------------------------------------------------------
   // Fonts
@@ -70,7 +59,7 @@
       boxShadow: "0 12px 30px rgba(0,0,0,0.28)",
       cursor: "pointer",
       fontFamily: "Poppins, sans-serif",
-      userSelect: "none"
+      userSelect: "none",
     });
 
     wrapper.className = "convertbubble-wrapper";
@@ -81,12 +70,19 @@
       background: "#000",
       display: "flex",
       alignItems: "center",
-      justifyContent: "center"
+      justifyContent: "center",
     });
 
-    if (config.launcherContent?.src) {
+    // IMPORTANT : dans ton config, tu as 2 sources possibles (launcherContent et video)
+    // On garde launcherContent en priorité.
+    const launcherSrc =
+      config.launcherContent?.src ||
+      config.video?.src ||
+      "";
+
+    if (launcherSrc) {
       const v = document.createElement("video");
-      v.src = config.launcherContent.src;
+      v.src = launcherSrc;
       v.muted = true;
       v.autoplay = true;
       v.loop = true;
@@ -94,7 +90,7 @@
       Object.assign(v.style, {
         width: "100%",
         height: "100%",
-        objectFit: "cover"
+        objectFit: "cover",
       });
       box.appendChild(v);
     }
@@ -106,7 +102,7 @@
         padding: "10px",
         textAlign: "center",
         fontSize: (caption.fontSize || 14) + "px",
-        color: caption.color || "#fff"
+        color: caption.color || "#fff",
       });
       cap.textContent = caption.text;
       wrapper.appendChild(cap);
@@ -116,10 +112,11 @@
   }
 
   // --------------------------------------------------------
-  // Overlay
+  // Overlay (player simple)
   // --------------------------------------------------------
   function openOverlay(config) {
-    if (!config.video?.src) return;
+    const src = config.video?.src || config.launcherContent?.src;
+    if (!src) return;
 
     const overlay = el("div", {
       position: "fixed",
@@ -128,17 +125,15 @@
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      zIndex: 2147483647
+      zIndex: 2147483647,
     });
+    overlay.className = "cb-overlay";
 
     const video = document.createElement("video");
-    video.src = config.video.src;
+    video.src = src;
     video.controls = true;
     video.autoplay = true;
-    Object.assign(video.style, {
-      maxWidth: "90vw",
-      maxHeight: "90vh"
-    });
+    Object.assign(video.style, { maxWidth: "90vw", maxHeight: "90vh" });
 
     overlay.onclick = () => overlay.remove();
     overlay.appendChild(video);
@@ -146,12 +141,12 @@
   }
 
   // --------------------------------------------------------
-  // MOUNT / RELOAD (CŒUR DU PATCH)
+  // MOUNT / RELOAD (wrapper fixed unique)
   // --------------------------------------------------------
   let currentConfig = null;
 
   async function mount(config) {
-    currentConfig = config;
+    currentConfig = config || {};
 
     let fw = document.getElementById("convertbubble-floating-wrapper");
     if (!fw) {
@@ -162,7 +157,7 @@
         right: "20px",
         bottom: "20px",
         zIndex: 2147483646,
-        pointerEvents: "none"
+        pointerEvents: "none",
       });
       document.body.appendChild(fw);
     }
@@ -177,26 +172,42 @@
   }
 
   // --------------------------------------------------------
-  // API PUBLIQUE (OBLIGATOIRE POUR LE BUILDER)
+  // API PUBLIQUE (obligatoire)
   // --------------------------------------------------------
   window.ConvertBubble = {
     init: mount,
     reload: mount,
     destroy: () => {
       document.getElementById("convertbubble-floating-wrapper")?.remove();
-      document.querySelectorAll(".cb-overlay")?.forEach(el => el.remove());
-    }
+      document.querySelectorAll(".cb-overlay")?.forEach((el) => el.remove());
+    },
   };
 
   // --------------------------------------------------------
-  // INIT AUTO (SITE / PREVIEW)
+  // ✅ CONTRAT : en BUILDER, PAS D’AUTO-INIT.
+  // Le builder appelle ConvertBubble.reload(snapshot).
+  // --------------------------------------------------------
+  const ctx = window.__CB_CONTEXT__;
+  if (ctx === "builder") {
+    console.log("CB.JS : mode BUILDER (auto-init désactivé, piloté par Builder)");
+    return;
+  }
+
+  // En preview iframe, on évite aussi l’auto-init si suppression active
+  if (window.__CB_PREVIEW_SUPPRESS_RENDER__ && ctx === "builder-preview") {
+    console.log("CB.JS : mode BUILDER-PREVIEW (auto-init désactivé)");
+    return;
+  }
+
+  // --------------------------------------------------------
+  // INIT AUTO (site client)
   // --------------------------------------------------------
   (async function init() {
     const config = await loadConfig();
     await mount(config);
   })();
-
 })();
+
 
 
 
