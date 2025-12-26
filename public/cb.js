@@ -145,7 +145,7 @@ if (config.launcherContent?.src) {
   // --------------------------------------------------------
   // MOUNT / RELOAD (wrapper fixed unique)
   // --------------------------------------------------------
-  let currentConfig = null;
+  
 
   async function mount(config) {
     currentConfig = config || {};
