@@ -10,10 +10,13 @@
   // --------------------------------------------------------
   // ⛔️ BLOCAGE ABSOLU EN PREVIEW / BUILDER
   // --------------------------------------------------------
-  if (window.__CB_PREVIEW_SUPPRESS_RENDER__) {
-    console.log("🧊 CB.JS bloqué (mode preview)");
-    return;
-  }
+  if (
+  window.__CB_PREVIEW_SUPPRESS_RENDER__ &&
+  window.__CB_CONTEXT__ !== "builder-preview"
+) {
+  console.log("🧊 CB.JS bloqué (mode preview)");
+  return;
+}
 
   // --------------------------------------------------------
   // Fonts
