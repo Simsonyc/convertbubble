@@ -1,22 +1,22 @@
 // ==========================================================
 //  ConvertBubble Player V4.5 — VERSION STABLE & SAFE
 //  ➜ UNE SEULE BULLE
-//  ➜ JAMAIS EN PREVIEW
+//  ➜ LIVE RELOAD ACTIVÉ
 // ==========================================================
 
 (function () {
   console.log("DEBUG — CB.JS chargé");
 
   // --------------------------------------------------------
-  // ⛔️ BLOCAGE ABSOLU EN PREVIEW / BUILDER
+  // ⛔️ BLOCAGE CONTRÔLÉ EN PREVIEW
   // --------------------------------------------------------
   if (
-  window.__CB_PREVIEW_SUPPRESS_RENDER__ &&
-  window.__CB_CONTEXT__ !== "builder-preview"
-) {
-  console.log("🧊 CB.JS bloqué (mode preview)");
-  return;
-}
+    window.__CB_PREVIEW_SUPPRESS_RENDER__ &&
+    window.__CB_CONTEXT__ !== "builder-preview"
+  ) {
+    console.log("🧊 CB.JS bloqué (mode preview)");
+    return;
+  }
 
   // --------------------------------------------------------
   // Fonts
@@ -146,10 +146,12 @@
   }
 
   // --------------------------------------------------------
-  // INIT — PLAYER SEULEMENT
+  // MOUNT / RELOAD (CŒUR DU PATCH)
   // --------------------------------------------------------
-  (async function init() {
-    const config = await loadConfig();
+  let currentConfig = null;
+
+  async function mount(config) {
+    currentConfig = config;
 
     let fw = document.getElementById("convertbubble-floating-wrapper");
     if (!fw) {
@@ -167,14 +169,35 @@
 
     fw.innerHTML = "";
 
-    const bubble = await createBubble(config);
+    const bubble = await createBubble(currentConfig);
     bubble.style.pointerEvents = "auto";
-    bubble.onclick = () => openOverlay(config);
+    bubble.onclick = () => openOverlay(currentConfig);
 
     fw.appendChild(bubble);
+  }
+
+  // --------------------------------------------------------
+  // API PUBLIQUE (OBLIGATOIRE POUR LE BUILDER)
+  // --------------------------------------------------------
+  window.ConvertBubble = {
+    init: mount,
+    reload: mount,
+    destroy: () => {
+      document.getElementById("convertbubble-floating-wrapper")?.remove();
+      document.querySelectorAll(".cb-overlay")?.forEach(el => el.remove());
+    }
+  };
+
+  // --------------------------------------------------------
+  // INIT AUTO (SITE / PREVIEW)
+  // --------------------------------------------------------
+  (async function init() {
+    const config = await loadConfig();
+    await mount(config);
   })();
 
 })();
+
 
 
 
