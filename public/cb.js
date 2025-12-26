@@ -68,7 +68,7 @@ const borderColor =
     const width = Number(bubbleCfg.width ?? 140);
     const height = Number(bubbleCfg.height ?? 180);
 
-    const animation = config?.animation || "none";
+    const animation = theme.animation || config?.animation || "none";
     const labelText = captionCfg.text || "";
 
     // Conteneur (la "bulle")
