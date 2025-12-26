@@ -89,27 +89,7 @@ if (config.launcherContent?.src) {
   launcher.appendChild(video);
 }
 
-    // IMPORTANT : dans ton config, tu as 2 sources possibles (launcherContent et video)
-    // On garde launcherContent en priorité.
-    const launcherSrc =
-      config.launcherContent?.src ||
-      config.video?.src ||
-      "";
-
-    if (launcherSrc) {
-      const v = document.createElement("video");
-      v.src = launcherSrc;
-      v.muted = true;
-      v.autoplay = true;
-      v.loop = true;
-      v.playsInline = true;
-      Object.assign(v.style, {
-        width: "100%",
-        height: "100%",
-        objectFit: "cover",
-      });
-      box.appendChild(v);
-    }
+   
 
   wrapper.appendChild(launcher);
 
