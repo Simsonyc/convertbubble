@@ -40,56 +40,63 @@
   // --------------------------------------------------------
   // Bubble creation
   // --------------------------------------------------------
-  function createBubble(config) {
-    ensureStyles();
+  // --------------------------------------------------------
+// Bubble creation
+// --------------------------------------------------------
+function createBubble(config) {
+  ensureStyles();
 
-    const theme = config?.theme || {};
-    const bubbleCfg = theme?.bubble || {};
-    const captionCfg = theme?.caption || {};
+  const theme = config?.theme || {};
+  const bubbleCfg = theme.bubble || {};
+  const captionCfg = theme.caption || {};
 
-    const shape = bubbleCfg.shape || "portrait"; // portrait | square | rectangle_horizontal | badge_round
-    const border = bubbleCfg.border || {};
+  // 🔹 Shape
+  const shape = bubbleCfg.shape || "portrait";
 
-const borderWidth = Number(border.width ?? bubbleCfg.borderWidth ?? 0);
-const borderRadius = Number(bubbleCfg.borderRadius ?? 18);
+  // 🔹 Border
+  const borderWidth = Number(bubbleCfg.borderWidth ?? 0);
+  const borderColor =
+    bubbleCfg.borderColor ??
+    theme.secondary ??
+    theme.primary ??
+    "transparent";
 
-const bg =
-  bubbleCfg.background ??
-  theme.primary ??
-  "#000000";
+  const borderRadius = Number(bubbleCfg.borderRadius ?? 18);
 
-const borderColor =
-  border.color ??
-  bubbleCfg.borderColor ??
-  theme.secondary ??
-  theme.primary ??
-  "transparent";
+  // 🔹 Background
+  const bg =
+    bubbleCfg.background ??
+    theme.primary ??
+    "#000000";
 
-    const width = Number(bubbleCfg.width ?? 140);
-    const height = Number(bubbleCfg.height ?? 180);
+  // 🔹 Size
+  const width = Number(bubbleCfg.width ?? 140);
+  const height = Number(bubbleCfg.height ?? 180);
 
-    const animation = theme.animation || config?.animation || "none";
-    const labelText = captionCfg.text || "";
+  // 🔹 Animation
+  const animation = theme.animation || config?.animation || "none";
 
-    // Conteneur (la "bulle")
-    const wrapper = el("div", {
-      class: "convertbubble-wrapper",
-      style: {
-        width: `${width}px`,
-        height: `${height}px`,
-        background: bg,
-        border: `${borderWidth}px solid ${borderColor}`,
-        borderRadius: `${borderRadius}px`,
-        boxSizing: "border-box",
-        overflow: "hidden",
-        boxShadow: "0 10px 30px rgba(0,0,0,.35)",
-        display: "flex",
-        flexDirection: "column",
-        position: "relative",
-        pointerEvents: "auto",
-      },
-    });
+  // 🔹 Caption
+  const labelText = captionCfg.text || "";
 
+  // Conteneur (bulle)
+  const wrapper = el("div", {
+    class: "convertbubble-wrapper",
+    style: {
+      width: `${width}px`,
+      height: `${height}px`,
+      background: bg,
+      border: `${borderWidth}px solid ${borderColor}`,
+      borderRadius: `${borderRadius}px`,
+      boxSizing: "border-box",
+      overflow: "hidden",
+      boxShadow: "0 10px 30px rgba(0,0,0,.35)",
+      display: "flex",
+      flexDirection: "column",
+      position: "relative",
+      pointerEvents: "auto",
+    },
+  });
     // Gestion shape (mapping simple, sans casser)
     if (shape === "badge_round") {
       wrapper.style.width = `${Math.min(width, height)}px`;
