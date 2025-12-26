@@ -64,14 +64,14 @@
 
     wrapper.className = "convertbubble-wrapper";
 
-    const box = el("div", {
-      width: "100%",
-      height: px(theme.bubble?.height || 120),
-      background: "#000",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    });
+    // 🔹 ZONE LAUNCHER (vidéo OU fond noir, mais contenue)
+const launcher = el("div", {
+  width: "100%",
+  height: px(theme.bubble?.launcherHeight || 120),
+  background: "#000",
+  overflow: "hidden",
+  position: "relative",
+});
 
     // IMPORTANT : dans ton config, tu as 2 sources possibles (launcherContent et video)
     // On garde launcherContent en priorité.
