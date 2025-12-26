@@ -55,8 +55,14 @@ const Builder = (() => {
   }
 
   function refreshPreview() {
-    post("cb:update", config);
+  // 1️⃣ Update preview iframe (comportement existant)
+  post("cb:update", config);
+
+  // 2️⃣ 🔑 PATCH 3 — update la bulle visible (parent)
+  if (window.ConvertBubble && typeof window.ConvertBubble.reload === "function") {
+    window.ConvertBubble.reload(config);
   }
+}
 
   // ===============================
   // API CONFIG
