@@ -48,18 +48,21 @@
     const captionCfg = theme?.caption || {};
 
     const shape = bubbleCfg.shape || "portrait"; // portrait | square | rectangle_horizontal | badge_round
-    const borderWidth = Number(bubbleCfg.borderWidth ?? 0);
-    const borderRadius = Number(bubbleCfg.borderRadius ?? 18);
+    const border = bubbleCfg.border || {};
 
-    const bg =
-  bubbleCfg.background ||
-  theme.primary ||
+const borderWidth = Number(border.width ?? bubbleCfg.borderWidth ?? 0);
+const borderRadius = Number(bubbleCfg.borderRadius ?? 18);
+
+const bg =
+  bubbleCfg.background ??
+  theme.primary ??
   "#000000";
 
 const borderColor =
-  bubbleCfg.borderColor ||
-  theme.secondary ||
-  theme.primary ||
+  border.color ??
+  bubbleCfg.borderColor ??
+  theme.secondary ??
+  theme.primary ??
   "transparent";
 
     const width = Number(bubbleCfg.width ?? 140);
