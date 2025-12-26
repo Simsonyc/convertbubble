@@ -80,6 +80,7 @@ const borderColor =
         background: bg,
         border: `${borderWidth}px solid ${borderColor}`,
         borderRadius: `${borderRadius}px`,
+        boxSizing: "border-box",
         overflow: "hidden",
         boxShadow: "0 10px 30px rgba(0,0,0,.35)",
         display: "flex",
