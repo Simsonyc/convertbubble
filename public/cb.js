@@ -1,43 +1,11 @@
 // ==========================================================
-//  ConvertBubble Player V4.5 — BUILDER-MASTER
-//  ➜ UNE SEULE BULLE (wrapper unique)
-//  ➜ EN BUILDER : pas d'auto-init, le Builder pilote tout
+//  ConvertBubble Player — BUILDER COMPAT
+//  ➜ Le builder reste inchangé
+//  ➜ cb.js s’adapte au mapping existant
 // ==========================================================
-// ===============================
-// 🔧 ÉTAT INTERNE (LIVE RELOAD)
-// ===============================
-let bubbleEl = null; // (laissé en place pour compat, non utilisé ici)
-let currentConfig = null;
 
 (function () {
-  console.log("DEBUG — CB.JS chargé");
-
-  // --------------------------------------------------------
-  // Fonts
-  // --------------------------------------------------------
-  (function loadFonts() {
-    if (document.getElementById("convertbubble-fonts")) return;
-    const link = document.createElement("link");
-    link.id = "convertbubble-fonts";
-    link.rel = "stylesheet";
-    link.href =
-      "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap";
-    document.head.appendChild(link);
-  })();
-
-  // --------------------------------------------------------
-  // Anim CSS (inject 1 fois)
-  // --------------------------------------------------------
-  (function injectAnimCSS() {
-    if (document.getElementById("cb-anim-css")) return;
-    const style = document.createElement("style");
-    style.id = "cb-anim-css";
-    style.textContent = `
-      @keyframes cb-bounce { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-6px);} }
-      @keyframes cb-rotate { from{ transform: rotate(0deg);} to{ transform: rotate(360deg);} }
-    `;
-    document.head.appendChild(style);
-  })();
+  console.log("CB.JS — builder-compatible chargé");
 
   // --------------------------------------------------------
   // Utils
@@ -47,56 +15,98 @@ let currentConfig = null;
     if (style) Object.assign(e.style, style);
     return e;
   }
-
   function px(v) {
     return typeof v === "number" ? v + "px" : v;
   }
 
-  async function loadConfig() {
-    const script = document.currentScript;
-    const cfg = script?.getAttribute("data-config");
-    const url = cfg || "/public/config.json";
-    const res = await fetch(url, { cache: "no-store" });
-    return res.json();
+  // --------------------------------------------------------
+  // 🔥 ADAPTATEUR DE CONFIG (CLÉ DU SUCCÈS)
+  // --------------------------------------------------------
+  function normalizeConfig(raw = {}) {
+    const theme = raw.theme || {};
+
+    return {
+      theme: {
+        primary: theme.primary || raw.primary || "#ff0055",
+        animation: raw.animation || theme.animation,
+
+        bubble: {
+          width: theme.width,
+          radius: theme.radius,
+          borderWidth: theme.borderWidth,
+          borderColor: theme.borderColor,
+          launcherHeight: theme.launcherHeight,
+        },
+
+        caption: {
+          text: raw.text || theme.text || "",
+          fontSize: raw.fontSize || theme.fontSize || 14,
+          color: raw.textColor || theme.textColor || "#ffffff",
+          fontFamily: raw.fontFamily || theme.fontFamily || "Poppins, sans-serif",
+        },
+      },
+
+      launcherContent: raw.launcherContent || {},
+      video: raw.video || {},
+    };
   }
 
   // --------------------------------------------------------
-  // Création de la bulle
+  // Animations CSS (1 seule injection)
   // --------------------------------------------------------
-  async function createBubble(config) {
-    const theme = config.theme || {};
-    const bubble = theme.bubble || {};
-    const caption = theme.caption || {};
+  (function injectAnimCSS() {
+    if (document.getElementById("cb-anim-css")) return;
+    const style = document.createElement("style");
+    style.id = "cb-anim-css";
+    style.textContent = `
+      @keyframes cb-bounce {
+        0%,100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+      }
+      @keyframes cb-rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+  })();
+
+  // --------------------------------------------------------
+  // Création de la bulle (renderer pur)
+  // --------------------------------------------------------
+  function createBubble(config) {
+    const theme = config.theme;
+    const bubble = theme.bubble;
+    const caption = theme.caption;
 
     const wrapper = el("div", {
-      position: "relative",
+      position: "fixed",
+      right: "20px",
+      bottom: "20px",
+      zIndex: 2147483646,
+
       width: px(bubble.width || 180),
       display: "flex",
       flexDirection: "column",
       overflow: "hidden",
 
-      // ✅ border / radius pilotés par config
       borderRadius: px(bubble.radius || 16),
       border: `${bubble.borderWidth || 0}px solid ${bubble.borderColor || "transparent"}`,
 
-      background: theme.primary || "#ff0055",
+      background: theme.primary,
       boxShadow: "0 12px 30px rgba(0,0,0,0.28)",
       cursor: "pointer",
 
-      // ✅ police pilotée par caption.fontFamily
-      fontFamily: caption.fontFamily || "Poppins, sans-serif",
-
+      fontFamily: caption.fontFamily,
       userSelect: "none",
     });
 
-    wrapper.className = "convertbubble-wrapper";
-
-    // ✅ animation pilotée par theme.animation
+    // Animation
     wrapper.style.animation = "none";
     if (theme.animation === "bounce") wrapper.style.animation = "cb-bounce 1.4s infinite";
     if (theme.animation === "rotation") wrapper.style.animation = "cb-rotate 4s linear infinite";
 
-    // 🔹 ZONE LAUNCHER (vidéo OU fond noir, contenue)
+    // Launcher (vidéo contenue)
     const launcher = el("div", {
       width: "100%",
       height: px(bubble.launcherHeight || 120),
@@ -105,36 +115,32 @@ let currentConfig = null;
       position: "relative",
     });
 
-    // ✅ Stopper les 404 "default"
-    const lsrc = config.launcherContent?.src;
-
-    if (lsrc && !lsrc.includes("default")) {
+    const src = config.launcherContent?.src;
+    if (src && !src.includes("default")) {
       const video = document.createElement("video");
-      video.src = lsrc;
+      video.src = src;
       video.muted = true;
       video.autoplay = true;
       video.loop = true;
       video.playsInline = true;
-
       Object.assign(video.style, {
         width: "100%",
         height: "100%",
         objectFit: "cover",
       });
-
       launcher.appendChild(video);
     }
 
     wrapper.appendChild(launcher);
 
+    // Texte
     if (caption.text) {
       const cap = el("div", {
         padding: "10px",
         textAlign: "center",
-        fontSize: (caption.fontSize || 14) + "px",
-        color: caption.color || "#fff",
-        // ✅ même police sur l’encart texte
-        fontFamily: caption.fontFamily || "Poppins, sans-serif",
+        fontSize: caption.fontSize + "px",
+        color: caption.color,
+        fontFamily: caption.fontFamily,
       });
       cap.textContent = caption.text;
       wrapper.appendChild(cap);
@@ -144,98 +150,34 @@ let currentConfig = null;
   }
 
   // --------------------------------------------------------
-  // Overlay (player simple)
+  // Mount / Reload (UNE seule bulle)
   // --------------------------------------------------------
-  function openOverlay(config) {
-    const src = config.video?.src || config.launcherContent?.src;
-    if (!src) return;
+  let floatingWrapper = null;
 
-    const overlay = el("div", {
-      position: "fixed",
-      inset: "0",
-      background: "rgba(0,0,0,0.85)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 2147483647,
-    });
-    overlay.className = "cb-overlay";
+  function mount(rawConfig) {
+    const config = normalizeConfig(rawConfig);
 
-    const video = document.createElement("video");
-    video.src = src;
-    video.controls = true;
-    video.autoplay = true;
-    Object.assign(video.style, { maxWidth: "90vw", maxHeight: "90vh" });
-
-    overlay.onclick = () => overlay.remove();
-    overlay.appendChild(video);
-    document.body.appendChild(overlay);
-  }
-
-  // --------------------------------------------------------
-  // MOUNT / RELOAD (wrapper fixed unique)
-  // --------------------------------------------------------
-  async function mount(config) {
-    currentConfig = config || {};
-
-    let fw = document.getElementById("convertbubble-floating-wrapper");
-    if (!fw) {
-      fw = document.createElement("div");
-      fw.id = "convertbubble-floating-wrapper";
-      Object.assign(fw.style, {
-        position: "fixed",
-        right: "20px",
-        bottom: "20px",
-        zIndex: 2147483646,
-        pointerEvents: "none",
-      });
-      document.body.appendChild(fw);
+    if (!floatingWrapper) {
+      floatingWrapper = document.createElement("div");
+      floatingWrapper.id = "convertbubble-floating-wrapper";
+      document.body.appendChild(floatingWrapper);
     }
 
-    fw.innerHTML = "";
-
-    const bubble = await createBubble(currentConfig);
-    bubble.style.pointerEvents = "auto";
-    bubble.onclick = () => openOverlay(currentConfig);
-
-    fw.appendChild(bubble);
+    floatingWrapper.innerHTML = "";
+    floatingWrapper.appendChild(createBubble(config));
   }
 
   // --------------------------------------------------------
-  // API PUBLIQUE (obligatoire)
+  // API PUBLIQUE (builder pilote tout)
   // --------------------------------------------------------
   window.ConvertBubble = {
     init: mount,
     reload: mount,
-    destroy: () => {
-      document.getElementById("convertbubble-floating-wrapper")?.remove();
-      document.querySelectorAll(".cb-overlay")?.forEach((el) => el.remove());
+    destroy() {
+      floatingWrapper?.remove();
+      floatingWrapper = null;
     },
   };
-
-  // --------------------------------------------------------
-  // ✅ CONTRAT : en BUILDER, PAS D’AUTO-INIT.
-  // Le builder appelle ConvertBubble.reload(snapshot).
-  // --------------------------------------------------------
-  const ctx = window.__CB_CONTEXT__;
-  if (ctx === "builder") {
-    console.log("CB.JS : mode BUILDER (auto-init désactivé, piloté par Builder)");
-    return;
-  }
-
-  // En preview iframe, on évite aussi l’auto-init si suppression active
-  if (window.__CB_PREVIEW_SUPPRESS_RENDER__ && ctx === "builder-preview") {
-    console.log("CB.JS : mode BUILDER-PREVIEW (auto-init désactivé)");
-    return;
-  }
-
-  // --------------------------------------------------------
-  // INIT AUTO (site client)
-  // --------------------------------------------------------
-  (async function init() {
-    const config = await loadConfig();
-    await mount(config);
-  })();
 })();
 
 
