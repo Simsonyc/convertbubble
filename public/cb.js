@@ -101,10 +101,17 @@
       userSelect: "none",
     });
 
-    // Animation
-    wrapper.style.animation = "none";
-    if (theme.animation === "bounce") wrapper.style.animation = "cb-bounce 1.4s infinite";
-    if (theme.animation === "rotation") wrapper.style.animation = "cb-rotate 4s linear infinite";
+    // ✅ animation pilotée par config.animation OU theme.animation
+const anim = config.animation || theme.animation;
+
+wrapper.style.animation = "none";
+if (anim === "bounce") {
+  wrapper.style.animation = "cb-bounce 1.4s infinite";
+}
+if (anim === "rotation") {
+  wrapper.style.animation = "cb-rotate 4s linear infinite";
+}
+
 
     // Launcher (vidéo contenue)
     const launcher = el("div", {
