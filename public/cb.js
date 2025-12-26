@@ -111,7 +111,8 @@ if (config.launcherContent?.src) {
       box.appendChild(v);
     }
 
-    wrapper.appendChild(box);
+  wrapper.appendChild(launcher);
+
 
     if (caption.text) {
       const cap = el("div", {
