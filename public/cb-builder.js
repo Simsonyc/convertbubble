@@ -55,14 +55,18 @@ const Builder = (() => {
   }
 
   function refreshPreview() {
-  // 1️⃣ Update preview iframe (comportement existant)
-  post("cb:update", config);
+  // 🔒 snapshot IMMUTABLE du config
+  const snapshot = structuredClone(config);
 
-  // 2️⃣ 🔑 PATCH 3 — update la bulle visible (parent)
+  // 1️⃣ Update preview iframe
+  post("cb:update", snapshot);
+
+  // 2️⃣ Update la bulle visible (parent)
   if (window.ConvertBubble && typeof window.ConvertBubble.reload === "function") {
-    window.ConvertBubble.reload(config);
+    window.ConvertBubble.reload(snapshot);
   }
 }
+
 
   // ===============================
   // API CONFIG
