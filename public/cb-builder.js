@@ -1,6 +1,6 @@
 /*
  * ConvertBubble — cb-builder.js
- * Version : 4.6.1 SAFE
+ * Version : 4.6.1 SAFE (PATCHED)
  * Rôle : Builder UI → Preview uniquement
  * ⚠️ Le builder NE CRÉE JAMAIS de bulle
  */
@@ -16,21 +16,25 @@ const Builder = (() => {
   // ===============================
   // Utils
   // ===============================
- function deepMerge(target, source) {
-  const output = structuredClone(target || {});
-  for (const key in source) {
-    if (
-      source[key] &&
-      typeof source[key] === "object" &&
-      !Array.isArray(source[key])
-    ) {
-      output[key] = deepMerge(output[key], source[key]);
-    } else {
-      output[key] = source[key];
+  function deepMerge(target, source) {
+    const output = structuredClone(target || {});
+    for (const key in source) {
+      if (
+        source[key] &&
+        typeof source[key] === "object" &&
+        !Array.isArray(source[key])
+      ) {
+        output[key] = deepMerge(output[key], source[key]);
+      } else {
+        output[key] = source[key];
+      }
     }
+    return output;
   }
-  return output;
-}
+
+  function snapshot() {
+    return structuredClone(config);
+  }
 
   function save() {
     try {
@@ -55,24 +59,22 @@ const Builder = (() => {
   }
 
   function refreshPreview() {
-  // 🔒 snapshot IMMUTABLE du config
-  const snapshot = structuredClone(config);
+    const snap = snapshot();
 
-  // 1️⃣ Update preview iframe
-  post("cb:update", snapshot);
+    // 1️⃣ Preview iframe
+    post("cb:update", snap);
 
-  // 2️⃣ Update la bulle visible (parent)
-  if (window.ConvertBubble && typeof window.ConvertBubble.reload === "function") {
-    window.ConvertBubble.reload(snapshot);
+    // 2️⃣ Bulle visible (parent)
+    if (window.ConvertBubble && typeof window.ConvertBubble.reload === "function") {
+      window.ConvertBubble.reload(snap);
+    }
   }
-}
-
 
   // ===============================
   // API CONFIG
   // ===============================
   function replace(newConfig) {
-    config = JSON.parse(JSON.stringify(newConfig || {}));
+    config = structuredClone(newConfig || {});
     save();
     refreshPreview();
   }
@@ -84,7 +86,7 @@ const Builder = (() => {
   }
 
   function getConfig() {
-    return config;
+    return snapshot();
   }
 
   function resetLocal() {
@@ -120,7 +122,11 @@ const Builder = (() => {
     const local = loadLocal();
     config = local || {};
 
-    const sendInit = () => post("cb:init", config);
+    const sendInit = () => {
+      const snap = snapshot();
+      post("cb:init", snap);
+    };
+
     iframe.complete
       ? sendInit()
       : iframe.addEventListener("load", sendInit, { once: true });
@@ -175,4 +181,5 @@ const Builder = (() => {
     setLauncherPreviewSeconds,
   };
 })();
+
 
