@@ -41,9 +41,29 @@
 // Resolve builder config → internal normalized config
 // --------------------------------------------------------
 function resolveBubbleConfig(config = {}) {
-  const theme = config.theme || {};
-  const bubble = theme.bubble || {};
-  const caption = theme.caption || {};
+  function createBubble(config) {
+  ensureStyles();
+
+  const resolved = resolveBubbleConfig(config);
+
+  const {
+    shape,
+    width,
+    height,
+    background,
+    borderWidth,
+    borderColor,
+    borderRadius,
+    animation,
+    captionText,
+    captionBackground,
+    captionColor,
+    captionFontFamily,
+    captionFontSize,
+    captionFontWeight,
+    captionAlign,
+  } = resolved;
+
 
   return {
     shape: bubble.shape ?? "portrait",
