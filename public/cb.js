@@ -37,9 +37,36 @@
   let currentConfig = null;
   let isMounted = false;
 
-  // --------------------------------------------------------
-  // Bubble creation
-  // --------------------------------------------------------
+ // --------------------------------------------------------
+// Resolve builder config → internal normalized config
+// --------------------------------------------------------
+function resolveBubbleConfig(config = {}) {
+  const theme = config.theme || {};
+  const bubble = theme.bubble || {};
+  const caption = theme.caption || {};
+
+  return {
+    shape: bubble.shape ?? "portrait",
+    width: Number(bubble.width ?? 140),
+    height: Number(bubble.height ?? 180),
+
+    background: bubble.background ?? "#000000",
+    borderWidth: Number(bubble.borderWidth ?? 0),
+    borderColor: bubble.borderColor ?? "transparent",
+    borderRadius: Number(bubble.borderRadius ?? 18),
+
+    animation: theme.animation ?? "none",
+
+    captionText: caption.text ?? "",
+    captionBackground: caption.background ?? "#ff2a7a",
+    captionColor: caption.color ?? "#ffffff",
+    captionFontFamily: caption.fontFamily ?? "Inter, system-ui",
+    captionFontSize: Number(caption.fontSize ?? 18),
+    captionFontWeight: caption.fontWeight ?? 700,
+    captionAlign: caption.align ?? "center",
+  };
+}
+
   // --------------------------------------------------------
 // Bubble creation
 // --------------------------------------------------------
@@ -51,7 +78,7 @@ function createBubble(config) {
   const captionCfg = theme.caption || {};
 
   // 🔹 Shape
-  const shape = bubbleCfg.shape || "portrait";
+  const shape = resolved.shape;
 
   // 🔹 Border
   const borderWidth = Number(bubbleCfg.borderWidth ?? 0);
