@@ -23,15 +23,15 @@
 
   "launcherContent": {
     "type": "videoPreview",
-    "src": "https://convertbubble-cdn.vercel.app/assets/convertbubble-default.mp4",
+    "src": "https://convertbubble.vercel.app/assets/convertbubble-default.mp4",
     "previewSeconds": 3
   },
 
   "position": "BR",
 
   "video": {
-    "src": "https://convertbubble-cdn.vercel.app/assets/convertbubble-default.mp4",
-    "poster": "https://convertbubble-cdn.vercel.app/assets/convertbubble-default.jpg"
+    "src": "https://convertbubble.vercel.app/assets/convertbubble-default.mp4",
+    "poster": "https://convertbubble.vercel.app/assets/convertbubble-default.jpg"
   },
 
   "ctaMode": "timed",
