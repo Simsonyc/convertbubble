@@ -1,191 +1,288 @@
-/* ConvertBubble — cb.js (STABLE) */
-(() => {
+// ======================================================
+// ConvertBubble Builder – Live Engine NeuroBreak™ V3.0
+// ======================================================
 
-  // --------------------------------------------------------
-  // Helpers
-  // --------------------------------------------------------
-  const el = (tag, attrs = {}, children = []) => {
-    const n = document.createElement(tag);
-    Object.entries(attrs).forEach(([k, v]) => {
-      if (k === "style") Object.assign(n.style, v);
-      else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
-      else n.setAttribute(k, v);
-    });
-    children.forEach((c) => n.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
-    return n;
-  };
+window.Builder = (() => {
+  const STORAGE_KEY = "convertbubble_builder_config";
+  let iframe, iframeWindow;
+  let currentConfig = {};
+  let lastSentConfig = null;
 
-  // --------------------------------------------------------
-  // Styles (animations)
-  // --------------------------------------------------------
-  const STYLE_ID = "convertbubble-styles";
-  function ensureStyles() {
-    if (document.getElementById(STYLE_ID)) return;
-    const style = document.createElement("style");
-    style.id = STYLE_ID;
-    style.textContent = `
-      @keyframes cb-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-      @keyframes cb-rotation { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
-      @keyframes cb-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
-      @keyframes cb-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
-    `;
-    document.head.appendChild(style);
-  }
+  // ======================================================
+  // INIT
+  // ======================================================
+  async function init({ iframe: iframeElement }) {
+    iframe = iframeElement;
+    iframeWindow = iframe.contentWindow;
+    console.log(" [Builder] Initialisation...");
 
-  // --------------------------------------------------------
-  // Resolve builder config → NORMALIZED CONFIG (SOURCE UNIQUE)
-  // --------------------------------------------------------
-  function resolveBubbleConfig(config = {}) {
-    const theme = config.theme || {};
-    const bubble = theme.bubble || {};
-    const caption = theme.caption || {};
+    // Restaure config locale
+    restoreLocal();
 
-    return {
-      shape: bubble.shape ?? "portrait",
-      width: Number(bubble.width ?? 140),
-      height: Number(bubble.height ?? 180),
+    iframe.addEventListener("load", () => {
+      console.log(" [Builder] Preview prête");
+      sendConfig();
+      fillInputsFromConfig(); // Synchronise les champs
+    });
 
-      background: bubble.background ?? "#000000",
-      borderWidth: Number(bubble.borderWidth ?? 0),
-      borderColor: bubble.borderColor ?? "transparent",
-      borderRadius: Number(bubble.borderRadius ?? 18),
+    setTimeout(sendConfig, 1000);
+  }
 
-      animation: theme.animation ?? "none",
+  // ======================================================
+  // UPDATE / REPLACE
+  // ======================================================
+  function update(partialConfig = {}) {
+    currentConfig = deepMerge(currentConfig, partialConfig);
+    saveLocal();
+    sendConfig();
+  }
 
-      captionText: caption.text ?? "",
-      captionBackground: caption.background ?? "#ff2a7a",
-      captionColor: caption.color ?? "#ffffff",
-      captionFontFamily: caption.fontFamily ?? "Inter, system-ui",
-      captionFontSize: Number(caption.fontSize ?? 18),
-      captionFontWeight: caption.fontWeight ?? 700,
-      captionAlign: caption.align ?? "center",
-    };
-  }
+  function replace(newConfig = {}) {
+    currentConfig = structuredClone(newConfig);
+    saveLocal();
+    sendConfig();
+    fillInputsFromConfig();
+  }
 
-  // --------------------------------------------------------
-  // Bubble creation (DOM)
-  // --------------------------------------------------------
-  function createBubble(config) {
-    ensureStyles();
+  // ======================================================
+  // LOCAL STORAGE
+  // ======================================================
+  function saveLocal() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(currentConfig));
+    console.log(" [Builder] Config enregistrée localement");
+  }
 
-    const r = resolveBubbleConfig(config);
+  function restoreLocal() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        currentConfig = JSON.parse(saved);
+        console.log(" [Builder] Config restaurée depuis localStorage");
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+  }
 
-    const wrapper = el("div", {
-      class: "convertbubble-wrapper",
-      style: {
-        width: `${r.width}px`,
-        height: `${r.height}px`,
-        background: r.background,
-        border: `${r.borderWidth}px solid ${r.borderColor}`,
-        borderRadius: `${r.borderRadius}px`,
-        boxSizing: "border-box",
-        overflow: "hidden",
-        boxShadow: "0 10px 30px rgba(0,0,0,.35)",
-        display: "flex",
-        flexDirection: "column",
-        position: "relative",
-        pointerEvents: "auto",
-      },
-    });
+  function resetLocal() {
+    localStorage.removeItem(STORAGE_KEY);
+    currentConfig = {};
+    console.log(" [Builder] Sauvegarde locale supprimée");
+  }
 
-    // Shape mapping
-    if (r.shape === "badge_round") {
-      const s = Math.min(r.width, r.height);
-      wrapper.style.width = `${s}px`;
-      wrapper.style.height = `${s}px`;
-      wrapper.style.borderRadius = "999px";
-    } else if (r.shape === "square") {
-      const s = Math.min(r.width, r.height);
-      wrapper.style.width = `${s}px`;
-      wrapper.style.height = `${s}px`;
-    } else if (r.shape === "rectangle_horizontal") {
-      wrapper.style.width = `${Math.max(r.width, r.height)}px`;
-      wrapper.style.height = `${Math.min(r.width, r.height)}px`;
-    }
+  // ======================================================
+  // COMMUNICATION
+  // ======================================================
+  function sendConfig() {
+    if (!iframeWindow) return;
+    if (JSON.stringify(currentConfig) === JSON.stringify(lastSentConfig)) return;
+    lastSentConfig = structuredClone(currentConfig);
 
-    // Video area (placeholder)
-    wrapper.appendChild(
-      el("div", {
-        style: { flex: "1 1 auto", background: "#000" },
-      })
-    );
+    iframeWindow.postMessage({ type: "cb:config", payload: currentConfig }, "*");
+    console.log(" [Builder] Config envoyée à la Preview");
+  }
 
-    // Caption
-    if (r.captionText) {
-      wrapper.appendChild(
-        el(
-          "div",
-          {
-            style: {
-              padding: "14px 16px",
-              background: r.captionBackground,
-              color: r.captionColor,
-              fontFamily: r.captionFontFamily,
-              fontSize: `${r.captionFontSize}px`,
-              fontWeight: r.captionFontWeight,
-              textAlign: r.captionAlign,
-              userSelect: "none",
-            },
-          },
-          [r.captionText]
-        )
-      );
-    }
+  // ======================================================
+  // SYNC DES INPUTS
+  // ======================================================
+  function fillInputsFromConfig() {
+    Object.entries({
+      primary: currentConfig?.theme?.primary,
+      shape: currentConfig?.theme?.shape,
+      animation: currentConfig?.animation,
+      brandLabel: currentConfig?.branding?.label,
+      brandColor: currentConfig?.branding?.color,
+      videoUrl: currentConfig?.video?.src,
+      poster: currentConfig?.video?.poster,
+      ctaLabel: currentConfig?.ctas?.[0]?.label,
+      ctaHref: currentConfig?.ctas?.[0]?.href,
+    }).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el && val !== undefined && val !== null) el.value = val;
+    });
+  }
 
-    // Animation
-    if (r.animation === "bounce") wrapper.style.animation = "cb-bounce 1.2s infinite";
-    if (r.animation === "rotation") wrapper.style.animation = "cb-rotation 4s linear infinite";
-    if (r.animation === "pulse") wrapper.style.animation = "cb-pulse 1.4s infinite";
-    if (r.animation === "shake") wrapper.style.animation = "cb-shake .7s infinite";
+  // ======================================================
+  // OVERLAY
+  // ======================================================
+  function openOverlay() {
+    iframeWindow?.postMessage({ type: "cb:open" }, "*");
+  }
+  function closeOverlay() {
+    iframeWindow?.postMessage({ type: "cb:close" }, "*");
+  }
 
-    return wrapper;
-  }
+  // ======================================================
+  // EXPORT
+  // ======================================================
+  function downloadJSON(filename = "config.json") {
+    const blob = new Blob([JSON.stringify(currentConfig, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+  }
 
-  // --------------------------------------------------------
-  // Mount / destroy (INCHANGÉ)
-  // --------------------------------------------------------
-  let currentConfig = null;
+  function generateSnippet() {
+    return `
+<!-- ConvertBubble Snippet (NeuroBreak™) -->
+<script src="./cb.js" data-config="./config.json" defer></script>
+<!-- /ConvertBubble -->
+`.trim();
+  }
 
-  async function mount(config) {
-    currentConfig = config;
-    ensureStyles();
+  // ======================================================
+  // UTILS
+  // ======================================================
+  function deepMerge(target, source) {
+    for (const key in source) {
+      if (
+        typeof source[key] === "object" &&
+        !Array.isArray(source[key]) &&
+        source[key] !== null
+      ) {
+        if (!target[key]) target[key] = {};
+        deepMerge(target[key], source[key]);
+      } else {
+        target[key] = source[key];
+      }
+    }
+    return target;
+  }
 
-    let fw = document.getElementById("convertbubble-floating-wrapper");
-    if (!fw) {
-      fw = document.createElement("div");
-      fw.id = "convertbubble-floating-wrapper";
-      fw.style.position = "fixed";
-      fw.style.right = "24px";
-      fw.style.bottom = "24px";
-      fw.style.zIndex = "2147483647";
-      fw.style.pointerEvents = "none";
-      document.body.appendChild(fw);
-    }
+  // ======================================================
+  // API PUBLIQUE
+  // ======================================================
+  return {
+    init,
+    update,
+    replace,
+    openOverlay,
+    closeOverlay,
+    downloadJSON,
+    generateSnippet,
+    resetLocal,
+  };
+})(); puis  preview.html : <!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>ConvertBubble – Live Preview</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #0b0b12;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      color: white;
+      font-family: system-ui, sans-serif;
+    }
+    .notice {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,0.08);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #aaa;
+      backdrop-filter: blur(6px);
+    }
+  </style>
+</head>
 
-    fw.innerHTML = "";
-    const bubble = createBubble(config);
-    bubble.style.pointerEvents = "auto";
-    fw.appendChild(bubble);
-  }
+<body>
+  <div class="notice"> ConvertBubble — Mode Preview Live</div>
 
-  function destroy() {
-    const fw = document.getElementById("convertbubble-floating-wrapper");
-    if (fw) fw.remove();
-  }
+  <!-- Script principal -->
+  <script src="../cb.js" defer></script>
 
-  // --------------------------------------------------------
-  // Public API
-  // --------------------------------------------------------
-  window.ConvertBubble = {
-    init: mount,
-    reload: mount,
-    destroy,
-    getConfig: () => currentConfig,
-  };
+  <script>
+    console.log(" Preview live initialisée…");
 
-  console.log("CB.JS — VERSION STABLE CHARGÉE");
+    // Attente du chargement complet
+    window.addEventListener("load", () => {
+      console.log(" Preview chargé, attente des messages du Builder...");
+      waitForConvertBubble();
+    });
 
-})();
+    // ======================================================
+    // Vérifie la présence de ConvertBubble
+    // ======================================================
+    function waitForConvertBubble() {
+      const start = performance.now();
+      const check = setInterval(() => {
+        if (window.ConvertBubble && (window.ConvertBubble.reload || window.ConvertBubble.init)) {
+          clearInterval(check);
+          console.log(` ConvertBubble détecté après ${Math.round(performance.now() - start)} ms`);
+        }
+      }, 200);
 
+      setTimeout(() => {
+        clearInterval(check);
+        if (!window.ConvertBubble) {
+          console.error(" Toujours pas de ConvertBubble après 4 secondes !");
+        }
+      }, 4000);
+    }
+
+    // ======================================================
+    // Gestion propre des messages envoyés par le Builder
+    // ======================================================
+    window.addEventListener("message", async (ev) => {
+      if (!ev.data || !ev.data.type) return;
+      const { type, payload } = ev.data;
+
+      switch (type) {
+        case "cb:config":
+          try {
+            console.log(" Nouvelle config reçue du Builder :", payload);
+
+            // Nettoyage avant reload
+            document.querySelectorAll(".convertbubble-wrapper, .cb-overlay").forEach(e => e.remove());
+
+            // Recharge ou init ConvertBubble proprement
+            if (window.ConvertBubble && typeof window.ConvertBubble.reload === "function") {
+              console.log(" Rechargement ConvertBubble avec nouvelle config...");
+              await window.ConvertBubble.reload(payload);
+            } else if (window.ConvertBubble && typeof window.ConvertBubble.init === "function") {
+              console.log(" Initialisation ConvertBubble avec nouvelle config...");
+              await window.ConvertBubble.init(payload);
+            } else {
+              console.warn(" ConvertBubble non encore prêt pour rechargement.");
+            }
+
+            console.log(" ConvertBubble rechargé avec succès");
+          } catch (err) {
+            console.error(" Erreur pendant le reload ConvertBubble :", err);
+          }
+          break;
+
+        case "cb:open":
+          document.querySelector("[data-cb-root]")?.click();
+          console.log(" Ouverture manuelle de la bulle depuis le Builder");
+          break;
+
+        case "cb:close":
+          document.querySelector(".cb-overlay")?.remove();
+          console.log(" Fermeture manuelle de la bulle depuis le Builder");
+          break;
+
+        case "cb:clear":
+          document.querySelectorAll(".convertbubble-wrapper, .cb-overlay").forEach(e => e.remove());
+          console.log(" ConvertBubble nettoyé manuellement.");
+          break;
+
+        default:
+          console.log(" Message ignoré :", ev.data);
+      }
+    });
+  </script>
+</body>
+</html>
 
 
