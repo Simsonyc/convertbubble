@@ -331,6 +331,17 @@
     (async function () {
       const iframe = document.getElementById("pv");
       await Builder.init({ iframe });
+      // ======================================================
+// 🎞️ DEFAULT VIDEO PREVIEW POUR LA BULLE (OBLIGATOIRE)
+// ======================================================
+Builder.update({
+  launcherContent: {
+    type: "videoPreview",
+    src: "https://convertbubble.vercel.app/assets/convertbubble-default.mp4",
+    previewSeconds: 3
+  }
+});
+
 
       const primary    = document.getElementById("primary");
       const shape      = document.getElementById("shape");
