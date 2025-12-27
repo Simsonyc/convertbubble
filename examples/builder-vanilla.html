@@ -761,85 +761,84 @@
       // init cb-builder
       await Builder.init({ iframe });
 
-      // On demande à la preview sa config actuelle
-      setTimeout(() => {
-        try {
-          iframe.contentWindow.postMessage({ type: "cb:request_config" }, "*");
-        } catch (e) {
-          console.warn("Impossible d’envoyer cb:request_config", e);
-        }
-      }, 800);
+      // ❌ NEUTRALISÉ — le builder ne demande JAMAIS d’état à la preview
+// setTimeout(() => {
+//   try {
+//     iframe.contentWindow.postMessage({ type: "cb:request_config" }, "*");
+//   } catch (e) {
+//     console.warn("Impossible d’envoyer cb:request_config", e);
+//   }
+// }, 800);
 
-      // Réception de la config initiale depuis la preview (config.json)
-      window.addEventListener("message", (ev) => {
-        if (ev.data?.type !== "cb:config_init") return;
-
-        const cfg = ev.data.payload;
-        if (!cfg) return;
-
-        console.log("📥 Config reçue depuis la preview :", cfg);
-
-        Builder.replace(cfg);
-
-        const theme    = cfg.theme   || {};
-        const border   = theme.border || {};
-        const caption  = theme.caption || {};
-        const video    = cfg.video   || {};
-        const branding = cfg.branding || {};
-
-        bubbleBg.value    = theme.primary || "#ff0055";
-        borderColor.value = border.color  || "#ffffff";
-        borderWidth.value = border.width ?? 2;
-
-        const shapeKey = shapeFromConfig(cfg);
-        shapeSel.value = shapeKey;
-
-        animationSel.value = cfg.animation || "none";
-
-        fontFamily.value   = caption.fontFamily || theme.fontFamily || "Poppins, system-ui, sans-serif";
-        fontSize.value     = caption.fontSize || 15;
-        fontSizeVal.textContent = (caption.fontSize || 15) + "px";
-        captionText.value = caption.text || "";
-
-        brandLabel.value = branding.label || "";
-        brandColor.value = branding.color || "#ff0055";
-
-        videoUrl.value = video.src    || "";
-        poster.value   = video.poster || "";
-
-        // CTA init
-        ctaMode = cfg.ctaMode || "fixed";
-        document
-          .querySelectorAll("input[name='ctaMode']")
-          .forEach((r) => {
-            r.checked = r.value === ctaMode;
-          });
-
-        ctas = Array.isArray(cfg.ctas)
-          ? cfg.ctas.map((c, idx) => ({
-              label: c.label || "",
-              href:  c.href  || "",
-              style: c.style || "primary",
-              showAt:
-                (cfg.timing?.sequence?.find((s) => s.index === idx) || {})
-                  .showAt ?? 0,
-              duration:
-                (cfg.timing?.sequence?.find((s) => s.index === idx) || {})
-                  .duration ?? 5,
-            }))
-          : [];
-
-        ctaPosSel.value = cfg.ctaOverlay?.position || "bottom-center";
-        ctaLayout.value = cfg.ctaOverlay?.layout   || "grid";
-        if (cfg.ctaOverlay?.buttonColor) {
-          ctaColor.value = cfg.ctaOverlay.buttonColor;
-        }
-        ctaShowAll.value = cfg.timing?.showAllAt ?? 0;
-
-        renderCTAList();
-        toast("✅ Config synchronisée avec la bulle démo", "success");
-      });
-    })();
+     // ❌ NEUTRALISÉ — la preview ne pilote jamais le builder
+// window.addEventListener("message", (ev) => {
+//   if (ev.data?.type !== "cb:config_init") return;
+//
+//   const cfg = ev.data.payload;
+//   if (!cfg) return;
+//
+//   console.log("📥 Config reçue depuis la preview :", cfg);
+//
+//   Builder.replace(cfg);
+//
+//   const theme    = cfg.theme   || {};
+//   const border   = theme.border || {};
+//   const caption  = theme.caption || {};
+//   const video    = cfg.video   || {};
+//   const branding = cfg.branding || {};
+//
+//   bubbleBg.value    = theme.primary || "#ff0055";
+//   borderColor.value = border.color  || "#ffffff";
+//   borderWidth.value = border.width ?? 2;
+//
+//   const shapeKey = shapeFromConfig(cfg);
+//   shapeSel.value = shapeKey;
+//
+//   animationSel.value = cfg.animation || "none";
+//
+//   fontFamily.value   = caption.fontFamily || theme.fontFamily || "Poppins, system-ui, sans-serif";
+//   fontSize.value     = caption.fontSize || 15;
+//   fontSizeVal.textContent = (caption.fontSize || 15) + "px";
+//   captionText.value = caption.text || "";
+//
+//   brandLabel.value = branding.label || "";
+//   brandColor.value = branding.color || "#ff0055";
+//
+//   videoUrl.value = video.src    || "";
+//   poster.value   = video.poster || "";
+//
+//   // CTA init
+//   ctaMode = cfg.ctaMode || "fixed";
+//   document
+//     .querySelectorAll("input[name='ctaMode']")
+//     .forEach((r) => {
+//       r.checked = r.value === ctaMode;
+//     });
+//
+//   ctas = Array.isArray(cfg.ctas)
+//     ? cfg.ctas.map((c, idx) => ({
+//         label: c.label || "",
+//         href:  c.href  || "",
+//         style: c.style || "primary",
+//         showAt:
+//           (cfg.timing?.sequence?.find((s) => s.index === idx) || {})
+//             .showAt ?? 0,
+//         duration:
+//           (cfg.timing?.sequence?.find((s) => s.index === idx) || {})
+//             .duration ?? 5,
+//       }))
+//     : [];
+//
+//   ctaPosSel.value = cfg.ctaOverlay?.position || "bottom-center";
+//   ctaLayout.value = cfg.ctaOverlay?.layout   || "grid";
+//   if (cfg.ctaOverlay?.buttonColor) {
+//     ctaColor.value = cfg.ctaOverlay.buttonColor;
+//   }
+//   ctaShowAll.value = cfg.timing?.showAllAt ?? 0;
+//
+//   renderCTAList();
+//   toast("✅ Config synchronisée avec la bulle démo", "success");
+// });
 
     // ====== LISTENERS THÈME / BRANDING / VIDÉO ======
     bubbleBg.addEventListener("input", (e) => {
