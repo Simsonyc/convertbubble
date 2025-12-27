@@ -1,129 +1,169 @@
-/*
- * ConvertBubble — cb-builder.js
- * Version : BUILDER-MASTER
- * Rôle : Builder UI → pilote la bulle flottante (parent)
- */
+// ======================================================
+// ConvertBubble Builder – Live Engine NeuroBreak™ V3.0
+// ======================================================
 
-window.__CB_CONTEXT__ = "builder";
+window.Builder = (() => {
+  const STORAGE_KEY = "convertbubble_builder_config";
+  let iframe, iframeWindow;
+  let currentConfig = {};
+  let lastSentConfig = null;
 
-const Builder = (() => {
-  let iframe;
-  let config = {};
-  const STORAGE_KEY = "convertbubble_config_v461";
+  // ======================================================
+  // INIT
+  // ======================================================
+  async function init({ iframe: iframeElement }) {
+    iframe = iframeElement;
+    iframeWindow = iframe.contentWindow;
+    console.log(" [Builder] Initialisation...");
 
-  function deepMerge(target, source) {
-    const output = structuredClone(target || {});
-    for (const key in source) {
-      if (source[key] && typeof source[key] === "object" && !Array.isArray(source[key])) {
-        output[key] = deepMerge(output[key], source[key]);
-      } else {
-        output[key] = source[key];
-      }
-    }
-    return output;
-  }
+    // Restaure config locale
+    restoreLocal();
 
-  function snapshot() {
-    return structuredClone(config);
-  }
+    iframe.addEventListener("load", () => {
+      console.log(" [Builder] Preview prête");
+      sendConfig();
+      fillInputsFromConfig(); // Synchronise les champs
+    });
 
-  function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); } catch {}
-  }
+    setTimeout(sendConfig, 1000);
+  }
 
-  function loadLocal() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; }
-  }
+  // ======================================================
+  // UPDATE / REPLACE
+  // ======================================================
+  function update(partialConfig = {}) {
+    currentConfig = deepMerge(currentConfig, partialConfig);
+    saveLocal();
+    sendConfig();
+  }
 
-  async function loadDefaultConfig() {
-    const res = await fetch("/public/config.json", { cache: "no-store" });
-    return res.json();
-  }
+  function replace(newConfig = {}) {
+    currentConfig = structuredClone(newConfig);
+    saveLocal();
+    sendConfig();
+    fillInputsFromConfig();
+  }
 
-  // (optionnel) si tu gardes l'iframe pour autre chose
-  function post(type, payload = {}) {
-    if (!iframe?.contentWindow) return;
-    iframe.contentWindow.postMessage({ type, payload }, "*");
-  }
+  // ======================================================
+  // LOCAL STORAGE
+  // ======================================================
+  function saveLocal() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(currentConfig));
+    console.log(" [Builder] Config enregistrée localement");
+  }
 
-  function refresh() {
-    const snap = snapshot();
+  function restoreLocal() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        currentConfig = JSON.parse(saved);
+        console.log(" [Builder] Config restaurée depuis localStorage");
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+  }
 
-    // ✅ UNE SEULE vérité : la bulle flottante du builder
-    if (window.ConvertBubble && typeof window.ConvertBubble.reload === "function") {
-      window.ConvertBubble.reload(snap);
-    }
+  function resetLocal() {
+    localStorage.removeItem(STORAGE_KEY);
+    currentConfig = {};
+    console.log(" [Builder] Sauvegarde locale supprimée");
+  }
 
-    // optionnel: si tu veux garder l’iframe, tu peux laisser ce post
-    post("cb:update", snap);
-  }
+  // ======================================================
+  // COMMUNICATION
+  // ======================================================
+  function sendConfig() {
+    if (!iframeWindow) return;
+    if (JSON.stringify(currentConfig) === JSON.stringify(lastSentConfig)) return;
+    lastSentConfig = structuredClone(currentConfig);
 
-  function replace(newConfig) {
-    config = structuredClone(newConfig || {});
-    save();
-    refresh();
-  }
+    iframeWindow.postMessage({ type: "cb:config", payload: currentConfig }, "*");
+    console.log(" [Builder] Config envoyée à la Preview");
+  }
 
-  function update(patch) {
-    config = deepMerge(config, patch || {});
-    save();
-    refresh();
-  }
+  // ======================================================
+  // SYNC DES INPUTS
+  // ======================================================
+  function fillInputsFromConfig() {
+    Object.entries({
+      primary: currentConfig?.theme?.primary,
+      shape: currentConfig?.theme?.shape,
+      animation: currentConfig?.animation,
+      brandLabel: currentConfig?.branding?.label,
+      brandColor: currentConfig?.branding?.color,
+      videoUrl: currentConfig?.video?.src,
+      poster: currentConfig?.video?.poster,
+      ctaLabel: currentConfig?.ctas?.[0]?.label,
+      ctaHref: currentConfig?.ctas?.[0]?.href,
+    }).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el && val !== undefined && val !== null) el.value = val;
+    });
+  }
 
-  function getConfig() {
-    return snapshot();
-  }
+  // ======================================================
+  // OVERLAY
+  // ======================================================
+  function openOverlay() {
+    iframeWindow?.postMessage({ type: "cb:open" }, "*");
+  }
+  function closeOverlay() {
+    iframeWindow?.postMessage({ type: "cb:close" }, "*");
+  }
 
-  function resetLocal() {
-    localStorage.removeItem(STORAGE_KEY);
-  }
+  // ======================================================
+  // EXPORT
+  // ======================================================
+  function downloadJSON(filename = "config.json") {
+    const blob = new Blob([JSON.stringify(currentConfig, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+  }
 
-  async function init({ iframe: iframeEl } = {}) {
-    iframe = iframeEl || null;
+  function generateSnippet() {
+    return `
+<!-- ConvertBubble Snippet (NeuroBreak™) -->
+<script src="./cb.js" data-config="./config.json" defer></script>
+<!-- /ConvertBubble -->
+`.trim();
+  }
 
-    const local = loadLocal();
-    if (local) {
-      config = local;
-    } else {
-      config = await loadDefaultConfig();
-      save();
-    }
+  // ======================================================
+  // UTILS
+  // ======================================================
+  function deepMerge(target, source) {
+    for (const key in source) {
+      if (
+        typeof source[key] === "object" &&
+        !Array.isArray(source[key]) &&
+        source[key] !== null
+      ) {
+        if (!target[key]) target[key] = {};
+        deepMerge(target[key], source[key]);
+      } else {
+        target[key] = source[key];
+      }
+    }
+    return target;
+  }
 
-    // ✅ première bulle immédiatement visible, sans scroll
-    refresh();
-  }
-
-  function downloadJSON(filename = "config.json") {
-    const blob = new Blob([JSON.stringify(config, null, 2)], { type: "application/json" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
-  }
-
-  function generateSnippet() {
-    const jsonStr = JSON.stringify(config);
-    const encoded = encodeURIComponent(jsonStr);
-    return `<script src="https://cdn.convertbubble.app/cb.js" data-config="${encoded}"></script>`;
-  }
-
-  function copySnippet() {
-    const snippet = generateSnippet();
-    navigator.clipboard?.writeText(snippet);
-    return snippet;
-  }
-
-  return {
-    init,
-    update,
-    replace,
-    getConfig,
-    downloadJSON,
-    generateSnippet,
-    copySnippet,
-    resetLocal,
-  };
-})();
+  // ======================================================
+  // API PUBLIQUE
+  // ======================================================
+  return {
+    init,
+    update,
+    replace,
+    openOverlay,
+    closeOverlay,
+    downloadJSON,
+    generateSnippet,
+    resetLocal,
+  };
+})(); 
 
 
 
