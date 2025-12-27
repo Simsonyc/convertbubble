@@ -1,47 +1,121 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ConvertBubble — Preview</title>
-  <style>
-    html, body { margin: 0; padding: 0; background: transparent; }
-  </style>
+  <meta charset="utf-8">
+  <title>ConvertBubble – Live Preview</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #0b0b12;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      color: white;
+      font-family: system-ui, sans-serif;
+    }
+    .notice {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,0.08);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #aaa;
+      backdrop-filter: blur(6px);
+    }
+  </style>
 </head>
+
 <body>
-  <!-- Preview vide : la bulle est injectée par cb.js via ConvertBubble.reload(...) -->
+  <div class="notice"> ConvertBubble — Mode Preview Live</div>
 
-  <script>
-    // IMPORTANT: la preview ne doit JAMAIS auto-rendre seule.
-    // Elle ne fait que recevoir une config live depuis le builder.
-    window.__CB_CONTEXT__ = "builder-preview";
-    window.__CB_PREVIEW_SUPPRESS_RENDER__ = true;
+  <!-- Script principal -->
+  <script src="../cb.js" defer></script>
 
-    function purgeAllBubbles() {
-      document
-        .querySelectorAll(
-          ".convertbubble-wrapper, .cb-overlay, #convertbubble-floating-wrapper"
-        )
-        .forEach(el => el.remove());
-    }
+  <script>
+    console.log(" Preview live initialisée…");
 
-    // Réception de la config live envoyée par cb-builder.js
-    window.addEventListener("message", (event) => {
-      const data = event.data || {};
-      if (data.type !== "cb:update") return;
+    // Attente du chargement complet
+    window.addEventListener("load", () => {
+      console.log(" Preview chargé, attente des messages du Builder...");
+      waitForConvertBubble();
+    });
 
-      const cfg = data.payload || data.config || {};
-      purgeAllBubbles();
+    // ======================================================
+    // Vérifie la présence de ConvertBubble
+    // ======================================================
+    function waitForConvertBubble() {
+      const start = performance.now();
+      const check = setInterval(() => {
+        if (window.ConvertBubble && (window.ConvertBubble.reload || window.ConvertBubble.init)) {
+          clearInterval(check);
+          console.log(` ConvertBubble détecté après ${Math.round(performance.now() - start)} ms`);
+        }
+      }, 200);
 
-      if (window.ConvertBubble && typeof window.ConvertBubble.reload === "function") {
-        window.ConvertBubble.reload(cfg);
-      } else {
-        console.warn("[Preview] ConvertBubble.reload indisponible (cb.js pas encore chargé)");
-      }
-    });
-  </script>
+      setTimeout(() => {
+        clearInterval(check);
+        if (!window.ConvertBubble) {
+          console.error(" Toujours pas de ConvertBubble après 4 secondes !");
+        }
+      }, 4000);
+    }
 
-  <!-- Engine ConvertBubble -->
-  <script src="/cb.js"></script>
+    // ======================================================
+    // Gestion propre des messages envoyés par le Builder
+    // ======================================================
+    window.addEventListener("message", async (ev) => {
+      if (!ev.data || !ev.data.type) return;
+      const { type, payload } = ev.data;
+
+      switch (type) {
+        case "cb:config":
+          try {
+            console.log(" Nouvelle config reçue du Builder :", payload);
+
+            // Nettoyage avant reload
+            document.querySelectorAll(".convertbubble-wrapper, .cb-overlay").forEach(e => e.remove());
+
+            // Recharge ou init ConvertBubble proprement
+            if (window.ConvertBubble && typeof window.ConvertBubble.reload === "function") {
+              console.log(" Rechargement ConvertBubble avec nouvelle config...");
+              await window.ConvertBubble.reload(payload);
+            } else if (window.ConvertBubble && typeof window.ConvertBubble.init === "function") {
+              console.log(" Initialisation ConvertBubble avec nouvelle config...");
+              await window.ConvertBubble.init(payload);
+            } else {
+              console.warn(" ConvertBubble non encore prêt pour rechargement.");
+            }
+
+            console.log(" ConvertBubble rechargé avec succès");
+          } catch (err) {
+            console.error(" Erreur pendant le reload ConvertBubble :", err);
+          }
+          break;
+
+        case "cb:open":
+          document.querySelector("[data-cb-root]")?.click();
+          console.log(" Ouverture manuelle de la bulle depuis le Builder");
+          break;
+
+        case "cb:close":
+          document.querySelector(".cb-overlay")?.remove();
+          console.log(" Fermeture manuelle de la bulle depuis le Builder");
+          break;
+
+        case "cb:clear":
+          document.querySelectorAll(".convertbubble-wrapper, .cb-overlay").forEach(e => e.remove());
+          console.log(" ConvertBubble nettoyé manuellement.");
+          break;
+
+        default:
+          console.log(" Message ignoré :", ev.data);
+      }
+    });
+  </script>
 </body>
-</html>
+</html> 
